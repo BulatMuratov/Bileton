@@ -1,5 +1,4 @@
-package com.bulka.userservice.dto.request;
-
+package com.bulka.userservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequestDto {
-    private String email;
-    private String password;
+public class ErrorResponse {
+    private int status;
+    private String error;
+    private String message;
 }

@@ -18,6 +18,11 @@ spring:
     hibernate:
       ddl-auto: validate
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
   liquibase:
     enabled: true
     change-log: db/changelog/db.changelog-master.xml
@@ -26,3 +31,11 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
+
+jwt:
+  private-key-path: ${JWT_PRIVATE_KEY_PATH}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
