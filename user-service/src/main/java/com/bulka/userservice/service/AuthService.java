@@ -1,8 +1,8 @@
 package com.bulka.userservice.service;
 
 import com.bulka.userservice.dto.request.LoginRequestDto;
+import com.bulka.userservice.dto.request.RefreshTokenRequest;
 import com.bulka.userservice.dto.request.RegistrationRequestDto;
-import com.bulka.userservice.dto.request.TokenRequest;
 import com.bulka.userservice.dto.response.TokenResponse;
 import com.bulka.userservice.dto.response.UserResponse;
 import com.bulka.userservice.exception.auth.BadCredentialsException;
@@ -68,15 +68,14 @@ public class AuthService {
                 .build();
     }
 
-    public TokenResponse refresh(String refreshToken){
-        UUID userId = refreshTokenService.validate(refreshToken);
+    public TokenResponse refresh(RefreshTokenRequest refreshTokenDto){
+        UUID userId = refreshTokenService.consume(refreshTokenDto.getRefreshToken());
 
         User user = userRepository.findById(userId)
                 .orElseThrow(
                         () -> new InvalidRefreshTokenException("Invalid refresh token")
                 );
 
-        refreshTokenService.revoke(refreshToken);
         String newAccessToken = jwtService.generateAccessToken(user);
         String newRefreshToken = refreshTokenService.create(userId);
 
@@ -86,8 +85,8 @@ public class AuthService {
                 .build();
     }
 
-    public void logout(String refreshToken){
-        refreshTokenService.revoke(refreshToken);
+    public void logout(RefreshTokenRequest refreshTokenDto){
+        refreshTokenService.revoke(refreshTokenDto.getRefreshToken());
     }
 
     private UserResponse toResponse(User user){
