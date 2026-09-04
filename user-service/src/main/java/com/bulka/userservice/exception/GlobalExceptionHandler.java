@@ -2,6 +2,7 @@ package com.bulka.userservice.exception;
 
 import com.bulka.userservice.dto.ErrorResponse;
 import com.bulka.userservice.exception.auth.BadCredentialsException;
+import com.bulka.userservice.exception.auth.InvalidRefreshTokenException;
 import com.bulka.userservice.exception.auth.UserAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(InvalidRefreshTokenException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(Exception ex) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

@@ -1,6 +1,7 @@
 package com.bulka.userservice.controller;
 
 import com.bulka.userservice.dto.request.LoginRequestDto;
+import com.bulka.userservice.dto.request.RefreshTokenRequest;
 import com.bulka.userservice.dto.request.RegistrationRequestDto;
 import com.bulka.userservice.dto.response.TokenResponse;
 import com.bulka.userservice.dto.response.UserResponse;
@@ -38,15 +39,15 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponse> refresh(@RequestBody String refreshToken) {
+    public ResponseEntity<TokenResponse> refresh(@RequestBody RefreshTokenRequest request) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(authService.refresh(refreshToken));
+                .body(authService.refresh(request));
     }
 
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void logout(@RequestBody String refreshToken) {
-        authService.logout(refreshToken);
+    public void logout(@RequestBody RefreshTokenRequest request) {
+        authService.logout(request);
     }
 }
