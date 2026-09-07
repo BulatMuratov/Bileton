@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="004-create-event-seats" author="bulat">
+
+        <createTable tableName="event_seats">
+
+            <column name="id" type="UUID">
+                <constraints
+                        primaryKey="true"
+                        nullable="false"
+                        primaryKeyName="pk_event_seats"/>
+            </column>
+
+            <column name="event_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="seat_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="price" type="NUMERIC(12,2)">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="event_seats"
+                baseColumnNames="event_id"
+                referencedTableName="events"
+                referencedColumnNames="id"
+                constraintName="fk_event_seats_event"/>
+
+        <addForeignKeyConstraint
+                baseTableName="event_seats"
+                baseColumnNames="seat_id"
+                referencedTableName="seats"
+                referencedColumnNames="id"
+                constraintName="fk_event_seats_seat"/>
+
+        <addUniqueConstraint
+                tableName="event_seats"
+                columnNames="event_id, seat_id"
+                constraintName="uk_event_seats_event_seat"/>
+
+        <createIndex
+                tableName="event_seats"
+                indexName="idx_event_seats_event_id">
+
+            <column name="event_id"/>
+        </createIndex>
+
+        <createIndex
+                tableName="event_seats"
+                indexName="idx_event_seats_status">
+            <column name="status"/>
+        </createIndex>
+
+    </changeSet>
+</databaseChangeLog>
