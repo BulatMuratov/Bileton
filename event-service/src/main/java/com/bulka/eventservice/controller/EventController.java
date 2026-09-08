@@ -7,6 +7,7 @@ import com.bulka.eventservice.dto.response.EventInfoResponseDto;
 import com.bulka.eventservice.dto.response.EventSeatsFullInfoResponseDto;
 import com.bulka.eventservice.service.EventService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +23,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/events")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class EventController {
 
     private final EventService eventService;
@@ -79,9 +80,4 @@ public class EventController {
                 .body(eventService.cancelEvent(eventId));
     }
 
-//    @DeleteMapping("/{eventId}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void deleteEvent(@PathVariable UUID eventId){
-//        eventService.deleteEvent(eventId);
-//    }
 }

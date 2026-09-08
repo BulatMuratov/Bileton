@@ -7,8 +7,9 @@ import com.bulka.eventservice.dto.request.EventSeatRequestDto;
 import com.bulka.eventservice.dto.response.EventDetailsResponseDto;
 import com.bulka.eventservice.dto.response.EventInfoResponseDto;
 import com.bulka.eventservice.dto.response.EventSeatFullInfoResponseDto;
-import com.bulka.eventservice.dto.response.EventSeatResponseDto;
 import com.bulka.eventservice.dto.response.EventSeatsFullInfoResponseDto;
+import com.bulka.eventservice.mapper.EventMapper;
+import com.bulka.eventservice.mapper.EventSeatMapper;
 import com.bulka.eventservice.model.Event;
 import com.bulka.eventservice.model.EventSeat;
 import com.bulka.eventservice.model.EventSeatStatus;
@@ -19,7 +20,7 @@ import com.bulka.eventservice.repository.EventRepository;
 import com.bulka.eventservice.repository.EventSeatRepository;
 import com.bulka.eventservice.repository.SeatRepository;
 import com.bulka.eventservice.repository.VenueRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +32,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class EventService {
 
     private final EventRepository eventRepository;
@@ -39,8 +40,11 @@ public class EventService {
     private final VenueRepository venueRepository;
     private final SeatRepository seatRepository;
 
+    private final EventMapper eventMapper;
+    private final EventSeatMapper eventSeatMapper;
+
     @Transactional
-    public EventDetailsResponseDto createEvent(EventDetailsRequestDto eventRequestDto){
+    public EventDetailsResponseDto createEvent(EventDetailsRequestDto eventRequestDto) {
         Venue venue = venueRepository.findById(eventRequestDto.getVenueId())
                 .orElseThrow(() -> new RuntimeException("Venue not found"));
 
@@ -48,6 +52,7 @@ public class EventService {
                 .stream()
                 .map(EventSeatRequestDto::getSeatId)
                 .toList();
+
         Map<UUID, BigDecimal> seatPriceMap = eventRequestDto.getSeats()
                 .stream()
                 .collect(Collectors.toMap(EventSeatRequestDto::getSeatId, EventSeatRequestDto::getPrice));
@@ -59,7 +64,7 @@ public class EventService {
         }
         List<Seat> seats = seatRepository.findAllByVenueIdAndIdIn(venue.getId(), seatIds);
 
-        if(seats.size() != eventRequestDto.getSeats().size()){
+        if (seats.size() != eventRequestDto.getSeats().size()) {
             throw new RuntimeException("Some seats do not belong to venue");
         }
 
@@ -86,7 +91,7 @@ public class EventService {
 
         List<EventSeat> savedEventSeatList = eventSeatRepository.saveAll(eventSeatList);
 
-        return toResponse(savedEvent, savedEventSeatList);
+        return eventMapper.toDetailsResponse(savedEvent, savedEventSeatList);
     }
 
     @Transactional(readOnly = true)
@@ -94,17 +99,7 @@ public class EventService {
         List<Event> events = eventRepository.findAll();
 
         return events.stream()
-                .map(event -> EventInfoResponseDto.builder()
-                        .id(event.getId())
-                        .venueId(event.getVenue().getId())
-                        .name(event.getName())
-                        .description(event.getDescription())
-                        .startAt(event.getStartAt())
-                        .endAt(event.getEndAt())
-                        .status(event.getStatus())
-                        .createdAt(event.getCreatedAt())
-                        .updatedAt(event.getUpdatedAt())
-                        .build())
+                .map(eventMapper::toInfoResponse)
                 .toList();
     }
 
@@ -112,6 +107,7 @@ public class EventService {
     public EventSeatsFullInfoResponseDto getEventSeatsByEventId(UUID eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
+
         Venue venue = event.getVenue();
 
         List<Seat> seatList = seatRepository.findAllByVenueId(venue.getId());
@@ -123,28 +119,15 @@ public class EventService {
                         Function.identity()
                 ));
 
-        List<EventSeatFullInfoResponseDto> fullSeatList = seatList.stream()
+        List<EventSeatFullInfoResponseDto> seats = seatList.stream()
                 .map(seat -> {
                     EventSeat eventSeat = eventSeatMap.get(seat.getId());
-                    if(eventSeat == null){
-                        throw new RuntimeException(
-                                "EventSeat not found for seat: " + seat.getId()
-                        );
+
+                    if (eventSeat == null) {
+                        throw new RuntimeException("EventSeat not found for seat: " + seat.getId());
                     }
 
-                    return EventSeatFullInfoResponseDto.builder()
-                            .id(eventSeat.getId())
-                            .section(seat.getSection())
-                            .rowNumber(seat.getRowNumber())
-                            .seatNumber(seat.getSeatNumber())
-                            .x(seat.getX())
-                            .y(seat.getY())
-                            .width(seat.getWidth())
-                            .height(seat.getHeight())
-                            .rotation(seat.getRotation())
-                            .price(eventSeat.getPrice())
-                            .status(eventSeat.getStatus())
-                            .build();
+                    return eventSeatMapper.toFullInfoResponse(seat, eventSeat);
                 })
                 .toList();
 
@@ -154,7 +137,7 @@ public class EventService {
                         .height(venue.getHeight())
                         .width(venue.getWidth())
                         .build())
-                .seats(fullSeatList)
+                .seats(seats)
                 .build();
     }
 
@@ -162,40 +145,20 @@ public class EventService {
     public EventInfoResponseDto getEventById(UUID eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
-        return EventInfoResponseDto.builder()
-                .id(event.getId())
-                .venueId(event.getVenue().getId())
-                .name(event.getName())
-                .description(event.getDescription())
-                .startAt(event.getStartAt())
-                .endAt(event.getEndAt())
-                .status(event.getStatus())
-                .createdAt(event.getCreatedAt())
-                .updatedAt(event.getUpdatedAt())
-                .build();
+        return eventMapper.toInfoResponse(event);
     }
 
     @Transactional
-    public EventInfoResponseDto publishEvent(UUID eventId){
+    public EventInfoResponseDto publishEvent(UUID eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        if(!EventStatus.DRAFT.equals(event.getStatus())){
+        if (!EventStatus.DRAFT.equals(event.getStatus())) {
             throw new RuntimeException("Status must be DRAFT");
         }
         event.setStatus(EventStatus.PUBLISHED);
 
-        return EventInfoResponseDto.builder()
-                .id(event.getId())
-                .venueId(event.getVenue().getId())
-                .name(event.getName())
-                .description(event.getDescription())
-                .startAt(event.getStartAt())
-                .endAt(event.getEndAt())
-                .status(event.getStatus())
-                .createdAt(event.getCreatedAt())
-                .updatedAt(event.getUpdatedAt())
-                .build();
+        return eventMapper.toInfoResponse(event);
     }
 
     @Transactional
@@ -204,79 +167,33 @@ public class EventService {
                 .orElseThrow(() -> new RuntimeException("Event not found"));
         event.setStatus(EventStatus.CANCELLED);
 
-        return EventInfoResponseDto.builder()
-                .id(event.getId())
-                .venueId(event.getVenue().getId())
-                .name(event.getName())
-                .description(event.getDescription())
-                .startAt(event.getStartAt())
-                .endAt(event.getEndAt())
-                .status(event.getStatus())
-                .createdAt(event.getCreatedAt())
-                .updatedAt(event.getUpdatedAt())
-                .build();
+        return eventMapper.toInfoResponse(event);
     }
 
     @Transactional
-    public EventInfoResponseDto updateEvent(UUID eventId, EventInfoRequestDto  eventInfoRequestDto) {
+    public EventInfoResponseDto updateEvent(UUID eventId, EventInfoRequestDto eventInfoRequestDto) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        if(eventInfoRequestDto.getName() != null){
+        if (eventInfoRequestDto.getName() != null) {
             event.setName(eventInfoRequestDto.getName());
         }
-        if(eventInfoRequestDto.getDescription() != null){
+        if (eventInfoRequestDto.getDescription() != null) {
             event.setDescription(eventInfoRequestDto.getDescription());
         }
-        if(eventInfoRequestDto.getStartAt() != null){
+        if (eventInfoRequestDto.getStartAt() != null) {
             event.setStartAt(eventInfoRequestDto.getStartAt());
         }
-        if(eventInfoRequestDto.getEndAt() != null){
+        if (eventInfoRequestDto.getEndAt() != null) {
             event.setEndAt(eventInfoRequestDto.getEndAt());
         }
 
-        return EventInfoResponseDto.builder()
-                .id(event.getId())
-                .venueId(event.getVenue().getId())
-                .name(event.getName())
-                .description(event.getDescription())
-                .startAt(event.getStartAt())
-                .endAt(event.getEndAt())
-                .status(event.getStatus())
-                .createdAt(event.getCreatedAt())
-                .updatedAt(event.getUpdatedAt())
-                .build();
+        return eventMapper.toInfoResponse(event);
     }
 
-    @Transactional
-    public void deleteEvent(UUID eventId) {
-        eventRepository.deleteById(eventId);
-    }
-
-
-    private EventDetailsResponseDto toResponse(Event event, List<EventSeat> eventSeatList){
-        List<EventSeatResponseDto> eventSeatDtoList = eventSeatList.stream()
-                .map(eventSeat -> EventSeatResponseDto.builder()
-                        .id(eventSeat.getId())
-                        .eventId(eventSeat.getEvent().getId())
-                        .seatId(eventSeat.getSeat().getId())
-                        .status(eventSeat.getStatus())
-                        .price(eventSeat.getPrice())
-                        .build()
-                )
-                .toList();
-
-        return EventDetailsResponseDto.builder()
-                .id(event.getId())
-                .venueId(event.getVenue().getId())
-                .name(event.getName())
-                .description(event.getDescription())
-                .startAt(event.getStartAt())
-                .endAt(event.getEndAt())
-                .status(event.getStatus())
-                .createdAt(event.getCreatedAt())
-                .updatedAt(event.getUpdatedAt())
-                .seats(eventSeatDtoList)
-                .build();
-    }
+//    @Transactional
+//    public void deleteEvent(UUID eventId) {
+//        eventRepository.deleteById(eventId);
+//    }
 }
+
