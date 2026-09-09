@@ -2,12 +2,18 @@ package com.bulka.eventservice.service;
 
 import com.bulka.eventservice.dto.VenueSizeDto;
 import com.bulka.eventservice.dto.request.EventDetailsRequestDto;
+import com.bulka.eventservice.dto.request.EventFilterRequest;
 import com.bulka.eventservice.dto.request.EventInfoRequestDto;
 import com.bulka.eventservice.dto.request.EventSeatRequestDto;
 import com.bulka.eventservice.dto.response.EventDetailsResponseDto;
 import com.bulka.eventservice.dto.response.EventInfoResponseDto;
 import com.bulka.eventservice.dto.response.EventSeatFullInfoResponseDto;
 import com.bulka.eventservice.dto.response.EventSeatsFullInfoResponseDto;
+import com.bulka.eventservice.exception.IllegalArgumentException;
+import com.bulka.eventservice.exception.event.EventNotFoundException;
+import com.bulka.eventservice.exception.event.EventSeatDataIntegrityException;
+import com.bulka.eventservice.exception.event.InvalidEventStateException;
+import com.bulka.eventservice.exception.venue.VenueNotFoundException;
 import com.bulka.eventservice.mapper.EventMapper;
 import com.bulka.eventservice.mapper.EventSeatMapper;
 import com.bulka.eventservice.model.Event;
@@ -20,7 +26,11 @@ import com.bulka.eventservice.repository.EventRepository;
 import com.bulka.eventservice.repository.EventSeatRepository;
 import com.bulka.eventservice.repository.SeatRepository;
 import com.bulka.eventservice.repository.VenueRepository;
+import com.bulka.eventservice.repository.specification.EventSpecifications;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,26 +56,24 @@ public class EventService {
     @Transactional
     public EventDetailsResponseDto createEvent(EventDetailsRequestDto eventRequestDto) {
         Venue venue = venueRepository.findById(eventRequestDto.getVenueId())
-                .orElseThrow(() -> new RuntimeException("Venue not found"));
+                .orElseThrow(() -> new VenueNotFoundException("Venue not found"));
 
         List<UUID> seatIds = eventRequestDto.getSeats()
                 .stream()
                 .map(EventSeatRequestDto::getSeatId)
                 .toList();
 
+        if(seatIds.size() != seatIds.stream().distinct().count()){
+            throw new IllegalArgumentException("The body contains duplicates");
+        }
         Map<UUID, BigDecimal> seatPriceMap = eventRequestDto.getSeats()
                 .stream()
                 .collect(Collectors.toMap(EventSeatRequestDto::getSeatId, EventSeatRequestDto::getPrice));
 
-        if (seatIds.size() != seatPriceMap.size()) {
-            throw new RuntimeException(
-                    "Duplicate seatId in request"
-            );
-        }
         List<Seat> seats = seatRepository.findAllByVenueIdAndIdIn(venue.getId(), seatIds);
 
         if (seats.size() != eventRequestDto.getSeats().size()) {
-            throw new RuntimeException("Some seats do not belong to venue");
+            throw new IllegalArgumentException("Some seats do not belong to venue");
         }
 
         Event event = Event.builder()
@@ -104,9 +112,43 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
+    public Page<EventInfoResponseDto> getEvents(EventFilterRequest filter, Pageable pageable) {
+        Specification<Event> specification = Specification.where((Specification<Event>) null);
+
+        if(filter.getStatus() != null){
+            specification = specification.and(EventSpecifications.hasStatus(filter.getStatus()));
+        }
+        if (filter.getVenueId() != null) {
+            specification = specification.and(
+                    EventSpecifications.hasVenueId(filter.getVenueId())
+            );
+        }
+
+        if (filter.getFrom() != null) {
+            specification = specification.and(
+                    EventSpecifications.startAtAfterOrEqual(
+                            filter.getFrom()
+                    )
+            );
+        }
+
+        if (filter.getTo() != null) {
+            specification = specification.and(
+                    EventSpecifications.startAtBeforeOrEqual(
+                            filter.getTo()
+                    )
+            );
+        }
+
+        return eventRepository
+                .findAll(specification, pageable)
+                .map(eventMapper::toInfoResponse);
+    }
+
+    @Transactional(readOnly = true)
     public EventSeatsFullInfoResponseDto getEventSeatsByEventId(UUID eventId) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new EventNotFoundException("Event not found"));
 
         Venue venue = event.getVenue();
 
@@ -124,7 +166,7 @@ public class EventService {
                     EventSeat eventSeat = eventSeatMap.get(seat.getId());
 
                     if (eventSeat == null) {
-                        throw new RuntimeException("EventSeat not found for seat: " + seat.getId());
+                        throw new EventSeatDataIntegrityException("EventSeat not found for seat: " + seat.getId());
                     }
 
                     return eventSeatMapper.toFullInfoResponse(seat, eventSeat);
@@ -144,17 +186,17 @@ public class EventService {
     @Transactional(readOnly = true)
     public EventInfoResponseDto getEventById(UUID eventId) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new EventNotFoundException("Event not found"));
         return eventMapper.toInfoResponse(event);
     }
 
     @Transactional
     public EventInfoResponseDto publishEvent(UUID eventId) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new EventNotFoundException("Event not found"));
 
         if (!EventStatus.DRAFT.equals(event.getStatus())) {
-            throw new RuntimeException("Status must be DRAFT");
+            throw new InvalidEventStateException("Event cannot be published from status: " + "event.getStatus()");
         }
         event.setStatus(EventStatus.PUBLISHED);
 
@@ -164,7 +206,11 @@ public class EventService {
     @Transactional
     public EventInfoResponseDto cancelEvent(UUID eventId) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new EventNotFoundException("Event not found"));
+
+        if (event.getStatus() == EventStatus.CANCELLED || event.getStatus() == EventStatus.FINISHED) {
+            throw new InvalidEventStateException("Event cannot be cancelled from status: "  + "event.getStatus()");
+        }
         event.setStatus(EventStatus.CANCELLED);
 
         return eventMapper.toInfoResponse(event);
@@ -173,7 +219,7 @@ public class EventService {
     @Transactional
     public EventInfoResponseDto updateEvent(UUID eventId, EventInfoRequestDto eventInfoRequestDto) {
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new EventNotFoundException("Event not found"));
 
         if (eventInfoRequestDto.getName() != null) {
             event.setName(eventInfoRequestDto.getName());

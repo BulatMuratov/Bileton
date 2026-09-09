@@ -1,16 +1,19 @@
 package com.bulka.eventservice.controller;
 
 import com.bulka.eventservice.dto.request.EventDetailsRequestDto;
+import com.bulka.eventservice.dto.request.EventFilterRequest;
 import com.bulka.eventservice.dto.request.EventInfoRequestDto;
 import com.bulka.eventservice.dto.response.EventDetailsResponseDto;
 import com.bulka.eventservice.dto.response.EventInfoResponseDto;
 import com.bulka.eventservice.dto.response.EventSeatsFullInfoResponseDto;
 import com.bulka.eventservice.service.EventService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,11 +52,19 @@ public class EventController {
                 .body(eventService.getEventSeatsByEventId(eventId));
     }
 
+    //Test method
+//    @GetMapping
+//    public ResponseEntity<List<EventInfoResponseDto>> getAllEvents(){
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(eventService.getAllEvents());
+//    }
+
     @GetMapping
-    public ResponseEntity<List<EventInfoResponseDto>> getAllEvents(){
+    public ResponseEntity<Page<EventInfoResponseDto>> getEventsByFilters(@ModelAttribute EventFilterRequest filterRequest, Pageable pageable){
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(eventService.getAllEvents());
+                .body(eventService.getEvents(filterRequest, pageable));
     }
 
     @PatchMapping("/{eventId}")
@@ -62,9 +73,6 @@ public class EventController {
                 .status(HttpStatus.OK)
                 .body(eventService.updateEvent(eventId, requestDto));
     }
-
-//    @GetMapping
-//    public ResponseEntity<?> getEventsByFilters
 
     @PostMapping("/{eventId}/publish")
     public ResponseEntity<EventInfoResponseDto> publishEvent(@PathVariable UUID eventId) {

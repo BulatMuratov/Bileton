@@ -5,6 +5,8 @@ import com.bulka.eventservice.dto.request.VenueDetailsRequestDto;
 import com.bulka.eventservice.dto.response.SeatResponseDto;
 import com.bulka.eventservice.dto.response.VenueDetailsResponseDto;
 import com.bulka.eventservice.dto.response.VenueInfoResponseDto;
+import com.bulka.eventservice.exception.venue.VenueNotFoundException;
+import com.bulka.eventservice.mapper.VenueMapper;
 import com.bulka.eventservice.model.Seat;
 import com.bulka.eventservice.model.Venue;
 import com.bulka.eventservice.repository.SeatRepository;
@@ -22,6 +24,8 @@ public class VenueService {
     private final VenueRepository venueRepository;
     private final SeatRepository seatRepository;
 
+    private final VenueMapper venueMapper;
+
     @Transactional
     public VenueDetailsResponseDto createVenue(VenueDetailsRequestDto venueDetailsRequestDto){
         Venue venue = Venue.builder()
@@ -38,7 +42,7 @@ public class VenueService {
                 .stream()
                 .map(seatRequestDto ->
                         Seat.builder()
-                                .venue(venue)
+                                .venue(savedVenue)
                                 .section(seatRequestDto.getSection())
                                 .rowNumber(seatRequestDto.getRowNumber())
                                 .seatNumber(seatRequestDto.getSeatNumber())
@@ -51,7 +55,7 @@ public class VenueService {
                 .toList();
         List<Seat> savedSeats = seatRepository.saveAll(seats);
 
-        return toResponse(savedVenue, savedSeats);
+        return venueMapper.toVenueDetails(savedVenue, savedSeats);
     }
 
     @Transactional(readOnly = true)
@@ -59,34 +63,22 @@ public class VenueService {
         List<Venue> allVenues = venueRepository.findAll();
         return allVenues
                 .stream()
-                .map(venue -> VenueInfoResponseDto.builder()
-                        .id(venue.getId())
-                        .name(venue.getName())
-                        .description(venue.getDescription())
-                        .width(venue.getWidth())
-                        .height(venue.getHeight())
-                        .build())
+                .map(venueMapper::toVenueInfo)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public VenueInfoResponseDto getVenueInfoById(UUID venueId){
         Venue venue =  venueRepository.findById(venueId).orElseThrow(() ->
-                new RuntimeException("Venue with id " + venueId + " not found"));
+                new VenueNotFoundException("Venue with id " + venueId + " not found"));
 
-        return VenueInfoResponseDto.builder()
-                .id(venue.getId())
-                .name(venue.getName())
-                .description(venue.getDescription())
-                .width(venue.getWidth())
-                .height(venue.getHeight())
-                .build();
+        return venueMapper.toVenueInfo(venue);
     }
 
     @Transactional
     public VenueInfoResponseDto updateVenue(UUID venueId, VenueInfoRequestDto venueInfoRequestDto) {
         Venue venue = venueRepository.findById(venueId).orElseThrow(() ->
-                new RuntimeException("Venue with id " + venueId + " not found"));
+                new VenueNotFoundException("Venue with id " + venueId + " not found"));
 
         if(venueInfoRequestDto.getName() != null){
             venue.setName(venueInfoRequestDto.getName());
@@ -101,67 +93,23 @@ public class VenueService {
             venue.setHeight(venueInfoRequestDto.getHeight());
         }
 
-        return VenueInfoResponseDto.builder()
-                .id(venue.getId())
-                .name(venue.getName())
-                .description(venue.getDescription())
-                .width(venue.getWidth())
-                .height(venue.getHeight())
-                .build();
+        return venueMapper.toVenueInfo(venue);
     }
 
-    @Transactional
-    public void deleteVenue(UUID venueId){
-        venueRepository.deleteById(venueId);
-    }
+//    @Transactional
+//    public void deleteVenue(UUID venueId){
+//        venueRepository.deleteById(venueId);
+//    }
 
     @Transactional(readOnly = true)
     public List<SeatResponseDto> getSeatsByVenueId(UUID venueId){
+        Venue venue = venueRepository.findById(venueId).orElseThrow(() ->
+                new VenueNotFoundException("Venue with id " + venueId + " not found"));
         List<Seat> seats = seatRepository.findAllByVenueId(venueId);
 
-        return seats
-                .stream()
-                .map(seat -> SeatResponseDto.builder()
-                        .id(seat.getId())
-                        .venueId(venueId)
-                        .section(seat.getSection())
-                        .rowNumber(seat.getRowNumber())
-                        .seatNumber(seat.getSeatNumber())
-                        .x(seat.getX())
-                        .y(seat.getY())
-                        .width(seat.getWidth())
-                        .height(seat.getHeight())
-                        .rotation(seat.getRotation())
-                        .build())
+        return seats.stream()
+                .map(seat -> venueMapper.toSeatResponse(venue, seat))
                 .toList();
 
-    }
-
-
-    private VenueDetailsResponseDto toResponse(Venue venue, List<Seat> seats){
-        List<SeatResponseDto> seatResponseDtoList = seats
-                .stream()
-                .map(seat -> SeatResponseDto.builder()
-                        .id(seat.getId())
-                        .venueId(venue.getId())
-                        .section(seat.getSection())
-                        .rowNumber(seat.getRowNumber())
-                        .seatNumber(seat.getSeatNumber())
-                        .x(seat.getX())
-                        .y(seat.getY())
-                        .width(seat.getWidth())
-                        .height(seat.getHeight())
-                        .rotation(seat.getRotation())
-                        .build())
-                .toList();
-
-        return VenueDetailsResponseDto.builder()
-                .id(venue.getId())
-                .name(venue.getName())
-                .description(venue.getDescription())
-                .width(venue.getWidth())
-                .height(venue.getHeight())
-                .seats(seatResponseDtoList)
-                .build();
     }
 }
