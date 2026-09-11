@@ -14,5 +14,5 @@ import java.util.UUID;
 @NoArgsConstructor
 public class BookingRequestDto {
     private UUID eventId;
-    private List<UUID> eventSeatsIdList;
+    private List<UUID> eventSeatIds;
 }
