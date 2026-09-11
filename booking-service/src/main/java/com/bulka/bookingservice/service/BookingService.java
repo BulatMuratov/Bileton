@@ -190,12 +190,16 @@ public class BookingService {
             return;
         }
         Booking booking = bookingOpt.get();
-        if (booking.getStatus() != BookingStatus.PENDING) {
-            System.out.printf("Booking status not PENDIG: %S %s\n", bookingId, booking.getStatus());
-            return;
-        }
 
-        booking.setStatus(BookingStatus.EXPIRED);
+        int updated = bookingRepository.expireIfPending(
+                bookingId,
+                BookingStatus.PENDING,
+                BookingStatus.EXPIRED
+        );
+
+        if(updated == 0){
+            System.out.printf("Status of booking %d already not PENDING \n", bookingId);
+        }
     }
 
     private void validateEventSeats(BookingRequestDto request, List<EventSeatInfo> eventSeats) {
