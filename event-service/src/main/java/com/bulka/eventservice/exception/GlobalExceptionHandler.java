@@ -2,6 +2,7 @@ package com.bulka.eventservice.exception;
 
 import com.bulka.eventservice.exception.event.EventNotFoundException;
 import com.bulka.eventservice.exception.event.EventSeatDataIntegrityException;
+import com.bulka.eventservice.exception.event.EventSeatNotFoundException;
 import com.bulka.eventservice.exception.event.InvalidEventStateException;
 import com.bulka.eventservice.exception.venue.VenueNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({VenueNotFoundException.class, EventNotFoundException.class})
+    @ExceptionHandler({VenueNotFoundException.class, EventNotFoundException.class, EventSeatNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleVenueDoesNotExistsException(VenueNotFoundException e) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)

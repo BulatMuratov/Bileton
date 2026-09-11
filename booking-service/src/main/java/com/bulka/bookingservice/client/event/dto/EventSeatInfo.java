@@ -12,7 +12,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class EventSeatInfoDto {
+public class EventSeatInfo {
     private UUID eventSeatId;
     private BigDecimal price;
     EventSeatStatus status;

@@ -11,4 +11,5 @@ import java.util.UUID;
 @Repository
 public interface EventSeatRepository extends JpaRepository<EventSeat, UUID> {
     List<EventSeat> findAllByEventId(UUID eventId);
+    List<EventSeat> findAllByEventIdAndIdIn(UUID eventId, List<UUID> seatIds);
 }
