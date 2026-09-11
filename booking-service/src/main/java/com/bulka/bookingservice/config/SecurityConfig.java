@@ -1,4 +1,4 @@
-package com.bulka.eventservice.config;
+package com.bulka.bookingservice.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -29,9 +29,10 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/internal/**").permitAll()
-
                         .requestMatchers("/api/v1/**")
+                        .authenticated()
+
+                        .requestMatchers("/internal/**")
                         .authenticated()
 
                         .anyRequest()

@@ -1,4 +1,4 @@
-package com.bulka.eventservice.model;
+package com.bulka.bookingservice.client.event.dto;
 
 public enum EventSeatStatus {
     AVAILABLE,

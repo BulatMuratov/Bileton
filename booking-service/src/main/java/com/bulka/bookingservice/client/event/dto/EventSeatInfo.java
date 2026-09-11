@@ -1,4 +1,4 @@
-package com.bulka.eventservice.dto.request;
+package com.bulka.bookingservice.client.event.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,9 +10,10 @@ import java.util.UUID;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-    public class EventSeatRequestDto {
-        private UUID seatId;
-        private BigDecimal price;
-    }
+@NoArgsConstructor
+public class EventSeatInfo {
+    private UUID eventSeatId;
+    private BigDecimal price;
+    private EventSeatStatus status;
+}
