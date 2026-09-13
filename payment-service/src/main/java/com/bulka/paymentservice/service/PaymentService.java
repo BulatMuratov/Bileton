@@ -4,10 +4,16 @@ import com.bulka.paymentservice.client.booking.BookingServiceClient;
 import com.bulka.paymentservice.client.booking.dto.BookingPaymentDetailsResponse;
 import com.bulka.paymentservice.dto.request.CreatePaymentRequest;
 import com.bulka.paymentservice.dto.response.PaymentResponseDto;
+import com.bulka.paymentservice.kafka.event.PaymentFailedEvent;
+import com.bulka.paymentservice.kafka.event.PaymentSucceededEvent;
+import com.bulka.paymentservice.kafka.outbox.EventSerializer;
+import com.bulka.paymentservice.kafka.outbox.OutboxEventFactory;
+import com.bulka.paymentservice.model.OutboxEvent;
 import com.bulka.paymentservice.model.Payment;
 import com.bulka.paymentservice.model.PaymentStatus;
 import com.bulka.paymentservice.provider.PaymentProvider;
 import com.bulka.paymentservice.provider.dto.PaymentResult;
+import com.bulka.paymentservice.repository.OutboxEventRepository;
 import com.bulka.paymentservice.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Currency;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -26,6 +33,10 @@ public class PaymentService {
     private final BookingServiceClient bookingServiceClient;
     private final PaymentProvider paymentProvider;
     private final PaymentRepository paymentRepository;
+
+    private final OutboxEventRepository outboxEventRepository;
+    private final OutboxEventFactory outboxEventFactory;
+    private final EventSerializer eventSerializer;
 
     @Transactional
     public PaymentResponseDto createPayment(UUID userId, CreatePaymentRequest request) {
@@ -64,10 +75,49 @@ public class PaymentService {
             savedPayment.setStatus(PaymentStatus.SUCCEEDED);
             savedPayment.setProviderPaymentId(result.getProviderPaymentId());
             savedPayment.setFailureReason(null);
+
+            UUID eventId = UUID.randomUUID();
+            PaymentSucceededEvent paymentSucceededEvent = PaymentSucceededEvent.builder()
+                    .eventId(eventId)
+                    .paymentId(savedPayment.getId())
+                    .bookingId(request.getBookingId())
+                    .userId(savedPayment.getUserId())
+                    .amount(savedPayment.getAmount())
+                    .currency(savedPayment.getCurrency())
+                    .build();
+
+            outboxEventRepository.save(outboxEventFactory.create(
+                    eventId,
+                    "PaymentSucceeded",
+                    "Payment",
+                    savedPayment.getId(),
+                    paymentSucceededEvent)
+            );
         }
         else {
             savedPayment.setStatus(PaymentStatus.FAILED);
             savedPayment.setFailureReason(result.getFailureReason());
+
+            UUID eventId = UUID.randomUUID();
+
+            PaymentFailedEvent event = new PaymentFailedEvent(
+                    eventId,
+                    savedPayment.getId(),
+                    savedPayment.getBookingId(),
+                    savedPayment.getUserId(),
+                    savedPayment.getAmount(),
+                    savedPayment.getCurrency(),
+                    savedPayment.getFailureReason()
+            );
+
+            outboxEventRepository.save(
+                    outboxEventFactory.create(
+                            eventId,
+                            "PaymentFailed",
+                            "Payment",
+                            savedPayment.getId(),
+                            event)
+            );
         }
 
         return toResponse(savedPayment);
