@@ -29,10 +29,10 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/**")
-                        .authenticated()
+                        .requestMatchers("/api/v1/internal/**").permitAll()
 
-                        .requestMatchers("/internal/**")
+
+                        .requestMatchers("/api/v1/**")
                         .authenticated()
 
                         .anyRequest()
