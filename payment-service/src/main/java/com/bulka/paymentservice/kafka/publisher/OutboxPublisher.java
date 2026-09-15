@@ -1,4 +1,4 @@
-package com.bulka.paymentservice.kafka.outbox;
+package com.bulka.paymentservice.kafka.publisher;
 
 import com.bulka.paymentservice.model.OutboxEvent;
 import com.bulka.paymentservice.model.OutboxEventStatus;
@@ -9,7 +9,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @Component
 @RequiredArgsConstructor
@@ -33,6 +35,20 @@ public class OutboxPublisher {
     }
 
     private void publish(OutboxEvent outboxEvent){
+        try {
+            kafkaTemplate.send(TOPIC,
+                    outboxEvent.getAggregateId().toString(),
+                    outboxEvent.getPayload()
+                    )
+                    .get();
 
+            outboxEvent.setStatus(OutboxEventStatus.PUBLISHED);
+            outboxEvent.setPublishedAt(OffsetDateTime.now());
+
+        } catch (InterruptedException ex){
+            throw new RuntimeException("Thread interrupted while publishing event " + outboxEvent.getId(), ex);
+        } catch (ExecutionException ex){
+            throw new RuntimeException("Failed to publish event " + outboxEvent.getId(), ex);
+        }
     }
 }

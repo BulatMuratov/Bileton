@@ -8,7 +8,6 @@ import com.bulka.paymentservice.kafka.event.PaymentFailedEvent;
 import com.bulka.paymentservice.kafka.event.PaymentSucceededEvent;
 import com.bulka.paymentservice.kafka.outbox.EventSerializer;
 import com.bulka.paymentservice.kafka.outbox.OutboxEventFactory;
-import com.bulka.paymentservice.model.OutboxEvent;
 import com.bulka.paymentservice.model.Payment;
 import com.bulka.paymentservice.model.PaymentStatus;
 import com.bulka.paymentservice.provider.PaymentProvider;
@@ -36,7 +35,6 @@ public class PaymentService {
 
     private final OutboxEventRepository outboxEventRepository;
     private final OutboxEventFactory outboxEventFactory;
-    private final EventSerializer eventSerializer;
 
     @Transactional
     public PaymentResponseDto createPayment(UUID userId, CreatePaymentRequest request) {
