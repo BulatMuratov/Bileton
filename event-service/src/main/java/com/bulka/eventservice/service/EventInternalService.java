@@ -21,6 +21,17 @@ public class EventInternalService {
     private final EventRepository eventRepository;
     private final EventSeatRepository eventSeatRepository;
 
+
+    @Transactional
+    public boolean sellSeats(UUID eventId, List<UUID> eventSeatIds){
+        int updated = eventSeatRepository.sellAvailableSeats(
+                eventId,
+                eventSeatIds
+        );
+
+        return updated == eventSeatIds.size();
+    }
+
     @Transactional(readOnly = true)
     public List<EventSeatInfoDto> getEventSeats(UUID eventId, List<UUID> eventSeatIds) {
         Event event = eventRepository.findById(eventId)
