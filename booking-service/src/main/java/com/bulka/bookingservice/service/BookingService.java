@@ -2,6 +2,7 @@ package com.bulka.bookingservice.service;
 
 import com.bulka.bookingservice.client.event.EventServiceClient;
 import com.bulka.bookingservice.client.event.dto.EventSeatInfo;
+import com.bulka.bookingservice.client.event.dto.EventSeatStatus;
 import com.bulka.bookingservice.dto.request.BookingRequestDto;
 import com.bulka.bookingservice.dto.response.BookingDetailsResponseDto;
 import com.bulka.bookingservice.dto.response.BookingInfoResponseDto;
@@ -13,13 +14,14 @@ import com.bulka.bookingservice.exception.booking.IllegalStateException;
 import com.bulka.bookingservice.exception.booking.ReservationNotFoundException;
 import com.bulka.bookingservice.exception.booking.SeatValidationException;
 import com.bulka.bookingservice.exception.booking.SeatsAlreadyReservedException;
+import com.bulka.bookingservice.kafka.dto.PaymentSucceededEvent;
 import com.bulka.bookingservice.model.Booking;
 import com.bulka.bookingservice.model.BookingItem;
 import com.bulka.bookingservice.model.BookingStatus;
 import com.bulka.bookingservice.repository.BookingItemRepository;
 import com.bulka.bookingservice.repository.BookingRepository;
+import com.bulka.bookingservice.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,10 +42,12 @@ public class BookingService {
     private final RedisService redisService;
 
 //    @Value("${redis.ttl-minute}")
-    private Duration reservedTtl =  Duration.ofMinutes(10);
+    private final Duration reservedTtl =  Duration.ofMinutes(10);
 
     private final BookingRepository bookingRepository;
     private final BookingItemRepository bookingItemRepository;
+    private final ProcessedEventRepository processedEventRepository;
+
     private final EventServiceClient eventServiceClient;
 
     @Transactional
@@ -189,7 +193,7 @@ public class BookingService {
             System.out.printf("Expired booking not found in DB: %s\n", bookingId);
             return;
         }
-        Booking booking = bookingOpt.get();
+//        Booking booking = bookingOpt.get();
 
         int updated = bookingRepository.expireIfPending(
                 bookingId,
@@ -201,6 +205,131 @@ public class BookingService {
             System.out.printf("Status of booking %d already not PENDING \n", bookingId);
         }
     }
+
+    @Transactional
+    public void handleBookingConfirmed(PaymentSucceededEvent event){
+        int marked = processedEventRepository.markProcessed(event.getEventId());
+        if(marked == 0){
+            return;
+        }
+
+//        int confirmed = bookingRepository.completedIfPending(
+//                event.getBookingId(),
+//                BookingStatus.PENDING,
+//                BookingStatus.CONFIRMED);
+//
+//        if(confirmed == 1){
+//            return;
+//        }
+        Booking booking = bookingRepository.findById(event.getBookingId())
+                .orElseThrow(() -> new BookingNotFoundException("Booking with id " + event.getBookingId() + " not found"));
+
+        List<UUID> eventSeatIds = booking.getItems().stream()
+                .map(BookingItem::getEventSeatId)
+                .toList();
+
+        switch (booking.getStatus()){
+            case CONFIRMED -> {
+                return;
+            }
+            case PENDING -> confirmPendingBooking(booking, eventSeatIds);
+            case EXPIRED -> confirmExpiredBooking(booking, eventSeatIds);
+            case CANCELLED -> {
+                refundPayment(booking);
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + booking.getStatus());
+        }
+    }
+
+    private void confirmPendingBooking(Booking booking, List<UUID> eventSeatIds){
+        boolean sold = eventServiceClient.sellSeats(
+                booking.getEventId(),
+                eventSeatIds
+        );
+
+        if (!sold) {
+            throw new IllegalStateException(
+                    "Failed to sell seats for booking " + booking.getId()
+            );
+        }
+
+        int confirmed = bookingRepository.confirmIfPending(
+                booking.getId(),
+                BookingStatus.PENDING,
+                BookingStatus.CONFIRMED
+        );
+
+        if (confirmed == 0) {
+            throw new IllegalStateException(
+                    "Failed to confirm booking " + booking.getId()
+            );
+        }
+    }
+
+    private void confirmExpiredBooking(Booking booking, List<UUID> eventSeatIds){
+        boolean reserved = redisService.reserve(
+                booking.getId(),
+                booking.getEventId(),
+                eventSeatIds
+        );
+
+        if (!reserved) {
+            refundPayment(booking);
+            return;
+        }
+
+        try {
+            boolean sold = eventServiceClient.sellSeats(
+                    booking.getEventId(),
+                    eventSeatIds
+            );
+
+            if (!sold) {
+                redisService.release(
+                        booking.getId(),
+                        booking.getEventId(),
+                        eventSeatIds
+                );
+
+                refundPayment(booking);
+                return;
+            }
+
+            int confirmed = bookingRepository.confirmIfExpired(
+                    booking.getId(),
+                    BookingStatus.EXPIRED,
+                    BookingStatus.CONFIRMED
+            );
+
+            if (confirmed == 0) {
+                throw new IllegalStateException(
+                        "Failed to confirm expired booking " + booking.getId()
+                );
+            }
+
+        } catch (RuntimeException e) {
+            try {
+                redisService.release(
+                        booking.getId(),
+                        booking.getEventId(),
+                        eventSeatIds
+                );
+            } catch (Exception releaseException) {
+                e.addSuppressed(releaseException);
+            }
+
+            throw e;
+        }
+    }
+
+    private void refundPayment(Booking booking){
+
+    }
+
+
+
+//    @Transactional
+//    public void handleBooking
 
     private void validateEventSeats(BookingRequestDto request, List<EventSeatInfo> eventSeats) {
         List<UUID> requestedSeatIds = request.getEventSeatIds();
@@ -227,6 +356,12 @@ public class BookingService {
             throw new EventSeatMismatchException(
                     "Event service returned unexpected event seats"
             );
+        }
+
+        boolean anyUnavailable = eventSeats.stream()
+                .anyMatch(seat -> seat.getStatus() != EventSeatStatus.AVAILABLE);
+        if(!anyUnavailable){
+            throw new SeatsAlreadyReservedException("Any seats are no available");
         }
     }
 

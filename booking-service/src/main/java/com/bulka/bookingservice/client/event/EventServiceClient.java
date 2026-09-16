@@ -4,6 +4,8 @@ import com.bulka.bookingservice.client.event.dto.EventSeatInfo;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -16,5 +18,11 @@ public interface EventServiceClient {
     List<EventSeatInfo> getEventSeats(
             @PathVariable("eventId") UUID eventId,
             @RequestParam("eventSeatIds") List<UUID> eventSeatIds
+    );
+
+    @PostMapping("/api/v1/internal/events/{eventId}/seats/sell")
+    boolean sellSeats(
+            @PathVariable UUID eventId,
+            @RequestBody List<UUID> eventSeatIds
     );
 }

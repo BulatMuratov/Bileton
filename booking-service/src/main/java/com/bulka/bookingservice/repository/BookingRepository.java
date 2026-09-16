@@ -26,4 +26,30 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
             BookingStatus pending,
             BookingStatus expired
     );
+
+    @Modifying
+    @Query("""
+    update Booking b
+    set b.status = :confirmed
+    where b.id = :bookingId
+    and b.status = :pending
+        """)
+    int confirmIfPending(
+            UUID bookingId,
+            BookingStatus pending,
+            BookingStatus confirmed
+    );
+
+    @Modifying
+    @Query("""
+        update Booking b
+        set b.status = :confirmed
+        where b.id = :bookingId
+          and b.status = :expired
+        """)
+    int confirmIfExpired(
+            UUID bookingId,
+            BookingStatus expired,
+            BookingStatus confirmed
+    );
 }
