@@ -1,5 +1,11 @@
 server:
   port: 8083
+  tomcat:
+    accept-count: 10
+    max-connections: 20
+    threads:
+      max: 10
+      min-spare: 2
 
 spring:
   application:
@@ -28,6 +34,14 @@ spring:
     enabled: true
     change-log: db/changelog/db.changelog-master.xml
 
+  kafka:
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        spring.json.value.default.type: com.bulka.bookingservice.kafka.dto.PaymentSucceededEvent
+        spring.json.use.type.headers: false
 jwt:
   public-key-path: classpath:keys/public_key.pem
 
