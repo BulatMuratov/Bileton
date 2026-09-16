@@ -36,6 +36,14 @@ services:
 
       KAFKA_JMX_PORT: 9999
 
+      KAFKA_HEAP_OPTS: "-Xms512m -Xmx512m"
+      KAFKA_JVM_PERFORMANCE_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35"
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+
+
 
   kafka-2:
     image: apache/kafka:4.1.2
@@ -72,6 +80,13 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
 
       KAFKA_JMX_PORT: 9999
+
+      KAFKA_HEAP_OPTS: "-Xms512m -Xmx512m"
+      KAFKA_JVM_PERFORMANCE_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35"
+    deploy:
+      resources:
+        limits:
+          memory: 768M
 
 
   kafka-3:
@@ -110,6 +125,12 @@ services:
 
       KAFKA_JMX_PORT: 9999
 
+      KAFKA_HEAP_OPTS: "-Xms512m -Xmx512m"
+      KAFKA_JVM_PERFORMANCE_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35"
+    deploy:
+      resources:
+        limits:
+          memory: 768M
   kafka-init:
     image: apache/kafka:4.1.2
     container_name: kafka-init
