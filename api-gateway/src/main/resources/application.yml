@@ -7,14 +7,61 @@ spring:
 
   cloud:
     gateway:
-      routes:
-        - id: user-service
-          uri: lb://user-service
-          predicates:
-            - Path=/api/users/**
+#      routes:
+      server:
+        webflux:
+          routes:
+            - id: user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/auth/**
+              filters:
+                - RewritePath=/auth/(?<segment>.*), /api/v1/auth/$\{segment}
 
-  eureka:
-    client:
-      service-url:
-        defaultZone: http://localhost:8761/eureka
+            - id: event-service-events
+              uri: lb://event-service
+              predicates:
+                - Path=/events,/events/**
+              filters:
+                - RewritePath=/events(?<segment>/.*)?, /api/v1/events\{segment}
+
+            - id: event-service-venues
+              uri: lb://event-service
+              predicates:
+                - Path=/venues,/venues/**
+              filters:
+                - RewritePath=/venues(?<segment>/.*)?, /api/v1/venues$\{segment}
+
+            - id: payment-service
+              uri: lb://payment-service
+              predicates:
+                - Path=/payments, /payments/**
+              filters:
+                - RewritePath=/payments(?<segment>/.*)?, /api/v1/payments\{segment}
+
+            - id: booking-service
+              uri: lb://booking-service
+              predicates:
+                - Path=/bookings,/bookings/**
+              filters:
+                - RewritePath=/bookings(?<segment>/.*)?, /api/v1/bookings\{segment}
+
+#            - id: payment-service
+#              uri: lb://payment-service
+#              predicates:
+#                - Path=/
+
+jwt:
+  public-key-path: classpath:keys/public_key.pem
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2.server.resource: TRACE
+    org.springframework.security.oauth2.jwt: TRACE
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
 

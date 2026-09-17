@@ -6,5 +6,5 @@
 
     <include file="v1/2026-09-09-create-table-booking.xml" relativeToChangelogFile="true"/>
     <include file="v1/2026-09-09-create-table-booking-items.xml" relativeToChangelogFile="true"/>
-
+    <include file="v1/2026-15-09-create-table-processed-events.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

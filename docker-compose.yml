@@ -14,7 +14,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 400M
 
   postgres-event:
     image: postgres:18
@@ -29,7 +29,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 400M
 
   postgres-booking:
     image: postgres:18
@@ -44,7 +44,22 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 400M
+
+  postgres-payments:
+    image: postgres:18
+    container_name: payment-postgres-db
+    environment:
+      POSTGRES_USER: ${PAYMENT_DB_USER}
+      POSTGRES_PASSWORD: ${PAYMENT_DB_PASSWORD}
+      POSTGRES_DB: ${PAYMENT_DB_NAME}
+    ports:
+      - "5436:5432"
+
+    deploy:
+      resources:
+        limits:
+          memory: 400M
 
   redis:
     image: redis:8
@@ -54,5 +69,7 @@ services:
       --requirepass ${REDIS_PASSWORD:-redispass} 
       --appendonly yes 
       --notify-keyspace-events Ex
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
