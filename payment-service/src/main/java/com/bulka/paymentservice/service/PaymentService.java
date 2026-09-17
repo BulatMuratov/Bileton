@@ -4,9 +4,11 @@ import com.bulka.paymentservice.client.booking.BookingServiceClient;
 import com.bulka.paymentservice.client.booking.dto.BookingPaymentDetailsResponse;
 import com.bulka.paymentservice.dto.request.CreatePaymentRequest;
 import com.bulka.paymentservice.dto.response.PaymentResponseDto;
+import com.bulka.paymentservice.exception.PaymentCannotCreateException;
+import com.bulka.paymentservice.exception.PaymentNotFoundException;
+import com.bulka.paymentservice.exception.SuccessPaymentAlreadyExistsException;
 import com.bulka.paymentservice.kafka.event.PaymentFailedEvent;
 import com.bulka.paymentservice.kafka.event.PaymentSucceededEvent;
-import com.bulka.paymentservice.kafka.outbox.EventSerializer;
 import com.bulka.paymentservice.kafka.outbox.OutboxEventFactory;
 import com.bulka.paymentservice.model.Payment;
 import com.bulka.paymentservice.model.PaymentStatus;
@@ -20,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Currency;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -41,16 +42,14 @@ public class PaymentService {
         BookingPaymentDetailsResponse booking = bookingServiceClient.getPaymentDetails(request.getBookingId());
 
         if(!booking.getUserId().equals(userId)){
-            throw new RuntimeException( "Booking not found" );
-//            throw new PaymentNotFoundException( "Booking not found" );
+            throw new PaymentCannotCreateException("Booking not found");
         }
 
         if(paymentRepository.existsByBookingIdAndStatus(
                 request.getBookingId(),
                 PaymentStatus.SUCCEEDED
         )){
-//            throw new PaymentAlreadyExistsException( "Booking has already been paid" );
-            throw new RuntimeException( "Booking has already been paid" );
+            throw new SuccessPaymentAlreadyExistsException("Booking has already been paid");
         }
 
         Payment payment = Payment.builder()
@@ -124,11 +123,9 @@ public class PaymentService {
     @Transactional(readOnly = true)
     public PaymentResponseDto getPayment(UUID paymentId, UUID userId) {
         Payment payment = paymentRepository.findById(paymentId)
-//                .orElseThrow(() -> new PaymentNotFoundException( "Payment with id " + paymentId + " not found" ));
-                .orElseThrow(() -> new RuntimeException("Payment with id " + paymentId + " not found"));
+                .orElseThrow(() -> new PaymentNotFoundException("Payment with id " + paymentId + " not found"));
         if (!payment.getUserId().equals(userId)) {
-//            throw new PaymentNotFoundException("Payment with id " + paymentId + " not found");
-            throw new RuntimeException("Payment with id " + paymentId + " not found");
+            throw new PaymentNotFoundException("Payment with id " + paymentId + " not found");
         }
 
         return toResponse(payment);
