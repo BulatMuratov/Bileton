@@ -6,6 +6,7 @@ import com.bulka.userservice.dto.request.RegistrationRequestDto;
 import com.bulka.userservice.dto.response.TokenResponse;
 import com.bulka.userservice.dto.response.UserResponse;
 import com.bulka.userservice.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,9 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody RegistrationRequestDto request) {
+    public ResponseEntity<UserResponse> register(
+            @RequestBody @Valid RegistrationRequestDto request
+    ) {
         UserResponse userResponse = authService.register(request);
 
         return ResponseEntity
@@ -32,14 +35,18 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequestDto request) {
+    public ResponseEntity<TokenResponse> login(
+            @RequestBody @Valid LoginRequestDto request
+    ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(authService.login(request));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponse> refresh(@RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<TokenResponse> refresh(
+            @RequestBody @Valid RefreshTokenRequest request
+    ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(authService.refresh(request));
@@ -47,7 +54,9 @@ public class AuthController {
 
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void logout(@RequestBody RefreshTokenRequest request) {
+    public void logout(
+            @RequestBody @Valid RefreshTokenRequest request
+    ) {
         authService.logout(request);
     }
 }

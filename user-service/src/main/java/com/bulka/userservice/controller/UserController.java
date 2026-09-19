@@ -1,28 +1,30 @@
 package com.bulka.userservice.controller;
 
-import com.bulka.userservice.dto.response.UserInfoResponse;
+import com.bulka.userservice.dto.response.UserResponse;
+import com.bulka.userservice.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users/")
+@RequiredArgsConstructor
 public class UserController {
 
+    private final UserService userService;
+
     @GetMapping("/me")
-    public UserInfoResponse getUserInfo() {
-        return null;
-    }
+    public ResponseEntity<UserResponse> getUserInfo(Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
 
-    /*
-        TODO: получать информацию по id может только status=ADMIN
-    */
-    @GetMapping("/{id}")
-    public UserInfoResponse getUserInfo(@RequestParam UUID id) {
-        return null;
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(userService.getUser(userId));
     }
-
 }
