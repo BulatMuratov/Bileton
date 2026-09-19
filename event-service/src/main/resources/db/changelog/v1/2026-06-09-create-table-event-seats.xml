@@ -6,7 +6,7 @@
             http://www.liquibase.org/xml/ns/dbchangelog
             https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet id="004-create-event-seats" author="bulat">
+    <changeSet id="006-create-event-seats" author="bulat">
 
         <createTable tableName="event_seats">
 
@@ -17,7 +17,7 @@
                         primaryKeyName="pk_event_seats"/>
             </column>
 
-            <column name="event_id" type="UUID">
+            <column name="event_section_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
 
@@ -37,10 +37,10 @@
 
         <addForeignKeyConstraint
                 baseTableName="event_seats"
-                baseColumnNames="event_id"
-                referencedTableName="events"
+                baseColumnNames="event_section_id"
+                referencedTableName="event_sections"
                 referencedColumnNames="id"
-                constraintName="fk_event_seats_event"/>
+                constraintName="fk_event_seats_event_section"/>
 
         <addForeignKeyConstraint
                 baseTableName="event_seats"
@@ -51,21 +51,25 @@
 
         <addUniqueConstraint
                 tableName="event_seats"
-                columnNames="event_id, seat_id"
-                constraintName="uk_event_seats_event_seat"/>
+                columnNames="event_section_id, seat_id"
+                constraintName="uk_event_seats_event_section_seat"/>
 
         <createIndex
                 tableName="event_seats"
-                indexName="idx_event_seats_event_id">
+                indexName="idx_event_seats_event_section_id">
 
-            <column name="event_id"/>
+            <column name="event_section_id"/>
+
         </createIndex>
 
         <createIndex
                 tableName="event_seats"
                 indexName="idx_event_seats_status">
+
             <column name="status"/>
+
         </createIndex>
 
     </changeSet>
+
 </databaseChangeLog>

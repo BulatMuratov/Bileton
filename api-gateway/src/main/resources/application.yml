@@ -23,7 +23,7 @@ spring:
               predicates:
                 - Path=/events,/events/**
               filters:
-                - RewritePath=/events(?<segment>/.*)?, /api/v1/events\{segment}
+                - RewritePath=/events(?<segment>/.*)?, /api/v1/events$\{segment}
 
             - id: event-service-venues
               uri: lb://event-service
@@ -37,14 +37,14 @@ spring:
               predicates:
                 - Path=/payments, /payments/**
               filters:
-                - RewritePath=/payments(?<segment>/.*)?, /api/v1/payments\{segment}
+                - RewritePath=/payments(?<segment>/.*)?, /api/v1/payments$\{segment}
 
             - id: booking-service
               uri: lb://booking-service
               predicates:
                 - Path=/bookings,/bookings/**
               filters:
-                - RewritePath=/bookings(?<segment>/.*)?, /api/v1/bookings\{segment}
+                - RewritePath=/bookings(?<segment>/.*)?, /api/v1/bookings$\{segment}
 
 #            - id: payment-service
 #              uri: lb://payment-service

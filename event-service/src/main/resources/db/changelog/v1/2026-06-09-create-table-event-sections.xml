@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="005-create-event-sections" author="bulat">
+
+        <createTable tableName="event_sections">
+
+            <column name="id" type="UUID">
+                <constraints
+                        primaryKey="true"
+                        nullable="false"
+                        primaryKeyName="pk_event_sections"/>
+            </column>
+
+            <column name="event_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="section_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="event_sections"
+                baseColumnNames="event_id"
+                referencedTableName="events"
+                referencedColumnNames="id"
+                constraintName="fk_event_sections_event"/>
+
+        <addForeignKeyConstraint
+                baseTableName="event_sections"
+                baseColumnNames="section_id"
+                referencedTableName="sections"
+                referencedColumnNames="id"
+                constraintName="fk_event_sections_section"/>
+
+        <addUniqueConstraint
+                tableName="event_sections"
+                columnNames="event_id, section_id"
+                constraintName="uk_event_sections_event_section"/>
+
+        <createIndex
+                tableName="event_sections"
+                indexName="idx_event_sections_event_id">
+
+            <column name="event_id"/>
+
+        </createIndex>
+
+        <createIndex
+                tableName="event_sections"
+                indexName="idx_event_sections_section_id">
+
+            <column name="section_id"/>
+
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

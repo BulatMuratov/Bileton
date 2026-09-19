@@ -1,7 +1,7 @@
 package com.bulka.eventservice.repository.specification;
 
-import com.bulka.eventservice.model.Event;
-import com.bulka.eventservice.model.EventStatus;
+import com.bulka.eventservice.model.event.Event;
+import com.bulka.eventservice.model.event.EventStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.OffsetDateTime;

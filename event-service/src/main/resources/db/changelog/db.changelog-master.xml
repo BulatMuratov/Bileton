@@ -5,8 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
 
     <include file="v1/2026-06-09-create-table-venues.xml" relativeToChangelogFile="true"/>
+    <include file="v1/2026-06-09-create-table-sections.xml" relativeToChangelogFile="true"/>
     <include file="v1/2026-06-09-create-table-seats.xml" relativeToChangelogFile="true"/>
     <include file="v1/2026-06-09-create-table-events.xml" relativeToChangelogFile="true"/>
+    <include file="v1/2026-06-09-create-table-event-sections.xml" relativeToChangelogFile="true"/>
     <include file="v1/2026-06-09-create-table-event-seats.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

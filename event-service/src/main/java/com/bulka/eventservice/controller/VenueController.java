@@ -1,9 +1,9 @@
 package com.bulka.eventservice.controller;
 
-import com.bulka.eventservice.dto.request.VenueInfoRequestDto;
-import com.bulka.eventservice.dto.request.VenueDetailsRequestDto;
-import com.bulka.eventservice.dto.response.VenueDetailsResponseDto;
-import com.bulka.eventservice.dto.response.VenueInfoResponseDto;
+import com.bulka.eventservice.dto.request.venue.VenueDetailsRequestDto;
+import com.bulka.eventservice.dto.request.venue.VenueInfoRequestDto;
+import com.bulka.eventservice.dto.response.venue.VenueDetailsResponseDto;
+import com.bulka.eventservice.dto.response.venue.VenueSummaryResponseDto;
 import com.bulka.eventservice.service.VenueService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,44 +27,53 @@ public class VenueController {
     private final VenueService venueService;
 
     @PostMapping
-    public ResponseEntity<VenueDetailsResponseDto> createVenue(@RequestBody VenueDetailsRequestDto requestDto) {
+    public ResponseEntity<VenueDetailsResponseDto> createVenue(
+            @RequestBody VenueDetailsRequestDto requestDto
+    ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(venueService.createVenue(requestDto));
     }
 
     @GetMapping
-    public ResponseEntity<List<VenueInfoResponseDto>> getAllVenue(){
+    public ResponseEntity<List<VenueSummaryResponseDto>> getAllVenues(){
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(venueService.getAllVenueInfo());
+                .body(venueService.getAllVenuesSummary());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<VenueInfoResponseDto> getVenue(@PathVariable UUID id) {
+    public ResponseEntity<VenueDetailsResponseDto> getFullVenueInfo(
+            @PathVariable UUID id
+    ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(venueService.getVenueInfoById(id));
-    }
-
-    @GetMapping("/{id}/seats")
-    public ResponseEntity<?> getSeatsOfVenue(@PathVariable UUID id) {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(venueService.getSeatsByVenueId(id));
+                .body(venueService.getVenueDetailsById(id));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> updateVenue(@PathVariable UUID id, @RequestBody VenueInfoRequestDto requestDto) {
+    public ResponseEntity<VenueSummaryResponseDto> updateVenueInfo(
+            @PathVariable UUID id,
+            @RequestBody VenueInfoRequestDto request
+    ){
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(venueService.updateVenue(id, requestDto));
+                .body(venueService.updateVenueInfo(id, request));
+
     }
 
-//    @DeleteMapping("/{id}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void deleteVenue(@PathVariable UUID id) {
-//        venueService.deleteVenue(id);
+//    @GetMapping("/{id}/seats")
+//    public ResponseEntity<?> getSeatsOfVenue(@PathVariable UUID id) {
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(venueService.getSeatsByVenueId(id));
+//    }
+
+//    @PatchMapping("/{id}")
+//    public ResponseEntity<?> updateVenue(@PathVariable UUID id, @RequestBody VenueInfoRequestDto requestDto) {
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(venueService.updateVenue(id, requestDto));
 //    }
 
 }

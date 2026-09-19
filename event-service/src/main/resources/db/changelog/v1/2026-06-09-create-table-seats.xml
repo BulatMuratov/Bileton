@@ -4,7 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
 
-    <changeSet id="002-create-table-seats" author="Bulat">
+    <changeSet id="003-create-table-seats" author="Bulat">
         <createTable tableName="seats">
 
             <column name="id" type="UUID">
@@ -14,18 +14,14 @@
                         primaryKeyName="pk_seats"/>
             </column>
 
-            <column name="venue_id" type="UUID">
+            <column name="section_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
-            
-            <column name="section" type="VARCHAR(100)">
-                <constraints nullable="false"/>
-            </column>
-            
+
             <column name="row_number" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
-            
+
             <column name="seat_number" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
@@ -49,22 +45,27 @@
             <column name="rotation" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
+
         </createTable>
 
         <addForeignKeyConstraint
                 baseTableName="seats"
-                baseColumnNames="venue_id"
-                referencedTableName="venues"
+                baseColumnNames="section_id"
+                referencedTableName="sections"
                 referencedColumnNames="id"
-                constraintName="fk_seats_venue"/>
+                constraintName="fk_seats_section"/>
 
         <addUniqueConstraint
                 tableName="seats"
-                columnNames="venue_id, section, row_number, seat_number"
+                columnNames="section_id, row_number, seat_number"
                 constraintName="uk_seats_position"/>
 
-        <createIndex tableName="seats"  indexName="idx_seats_venue_id">
-            <column name="venue_id"/>
+        <createIndex
+                tableName="seats"
+                indexName="idx_seats_section_id">
+
+            <column name="section_id"/>
+
         </createIndex>
     </changeSet>
 </databaseChangeLog>
