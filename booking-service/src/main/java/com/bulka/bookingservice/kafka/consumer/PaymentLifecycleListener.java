@@ -11,12 +11,11 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @KafkaListener(id="payment-lifecycle-id", topics="payments.lifecycle", groupId="booking-service")
-public class PaymentEventListener {
+public class PaymentLifecycleListener {
 
     private final BookingService bookingService;
     @KafkaHandler
     public void handlePaymentSucceeded(PaymentSucceededEvent event){
-        System.out.println("HAHAHAHAHAHAHAHAHAHAHAHAHAH");
         bookingService.handleBookingConfirmed(event);
     }
 

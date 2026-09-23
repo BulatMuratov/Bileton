@@ -5,6 +5,9 @@ import com.bulka.paymentservice.model.OutboxEventStatus;
 import com.bulka.paymentservice.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,17 +33,18 @@ public class OutboxPublisher {
         for(OutboxEvent outboxEvent : outboxEventList){
             publish(outboxEvent);
         }
-
-
     }
 
     private void publish(OutboxEvent outboxEvent){
         try {
-            kafkaTemplate.send(TOPIC,
-                    outboxEvent.getAggregateId().toString(),
-                    outboxEvent.getPayload()
-                    )
-                    .get();
+            Message<String> message = MessageBuilder
+                    .withPayload(outboxEvent.getPayload())
+                    .setHeader(KafkaHeaders.TOPIC, TOPIC)
+                    .setHeader(KafkaHeaders.KEY, outboxEvent.getAggregateId().toString())
+                    .setHeader("messageId", outboxEvent.getId().toString())
+                    .build();
+
+            kafkaTemplate.send(message).get();
 
             outboxEvent.setStatus(OutboxEventStatus.PUBLISHED);
             outboxEvent.setPublishedAt(OffsetDateTime.now());

@@ -10,10 +10,12 @@ import com.bulka.paymentservice.exception.SuccessPaymentAlreadyExistsException;
 import com.bulka.paymentservice.kafka.event.PaymentFailedEvent;
 import com.bulka.paymentservice.kafka.event.PaymentSucceededEvent;
 import com.bulka.paymentservice.kafka.outbox.OutboxEventFactory;
+import com.bulka.paymentservice.model.IdempotencyKey;
 import com.bulka.paymentservice.model.Payment;
 import com.bulka.paymentservice.model.PaymentStatus;
 import com.bulka.paymentservice.provider.PaymentProvider;
 import com.bulka.paymentservice.provider.dto.PaymentResult;
+import com.bulka.paymentservice.repository.IdempotencyKeyRepository;
 import com.bulka.paymentservice.repository.OutboxEventRepository;
 import com.bulka.paymentservice.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,12 +35,28 @@ public class PaymentService {
     private final BookingServiceClient bookingServiceClient;
     private final PaymentProvider paymentProvider;
     private final PaymentRepository paymentRepository;
+    private final IdempotencyKeyRepository idempotencyKeyRepository;
 
     private final OutboxEventRepository outboxEventRepository;
     private final OutboxEventFactory outboxEventFactory;
 
     @Transactional
-    public PaymentResponseDto createPayment(UUID userId, CreatePaymentRequest request) {
+    public PaymentResponseDto createPayment(UUID userId,String idempotencyKey, CreatePaymentRequest request) {
+        UUID paymentId = UUID.randomUUID();
+
+        int inserted = idempotencyKeyRepository.insertIfAbsent(
+                UUID.randomUUID(),
+                userId,
+                idempotencyKey,
+                paymentId
+        );
+        if(inserted == 0){
+            IdempotencyKey key = idempotencyKeyRepository.findByIdempotencyKeyAndUserId(idempotencyKey, userId)
+                    .orElseThrow(() -> new IllegalStateException("Idempotency key not found"));
+
+            return getPayment(key.getPaymentId(), userId);
+        }
+
         BookingPaymentDetailsResponse booking = bookingServiceClient.getPaymentDetails(request.getBookingId());
 
         if(!booking.getUserId().equals(userId)){
@@ -53,6 +71,7 @@ public class PaymentService {
         }
 
         Payment payment = Payment.builder()
+                .id(paymentId)
                 .bookingId(booking.getBookingId())
                 .userId(booking.getUserId())
                 .amount(booking.getAmount())
@@ -84,7 +103,7 @@ public class PaymentService {
                     .build();
 
             outboxEventRepository.save(outboxEventFactory.create(
-                    eventId,
+                    UUID.randomUUID(),
                     "PaymentSucceeded",
                     "Payment",
                     savedPayment.getId(),

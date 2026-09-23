@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,16 +26,23 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping
-    public ResponseEntity<PaymentResponseDto> pay(@RequestBody CreatePaymentRequest request, Authentication authentication) {
+    public ResponseEntity<PaymentResponseDto> pay(
+            @RequestBody CreatePaymentRequest request,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            Authentication authentication
+    ) {
         UUID userId = UUID.fromString(authentication.getName());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(paymentService.createPayment(userId, request));
+                .body(paymentService.createPayment(userId, idempotencyKey, request));
     }
 
     @GetMapping("/{paymentId}")
-    public ResponseEntity<PaymentResponseDto> getPayment(@PathVariable UUID paymentId, Authentication authentication) {
+    public ResponseEntity<PaymentResponseDto> getPayment(
+            @PathVariable UUID paymentId,
+            Authentication authentication
+    ) {
         UUID userId = UUID.fromString(authentication.getName());
 
         return ResponseEntity
@@ -43,7 +51,9 @@ public class PaymentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PaymentResponseDto>> getAllPayments(Authentication authentication) {
+    public ResponseEntity<List<PaymentResponseDto>> getAllPayments(
+            Authentication authentication
+    ) {
         UUID userId = UUID.fromString(authentication.getName());
 
         return ResponseEntity

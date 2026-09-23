@@ -6,5 +6,6 @@
 
     <include file="v1/2026-13-09-create-table-payments.xml" relativeToChangelogFile="true"/>
     <include file="v1/2026-14-09-create-table-outbox-events.xml" relativeToChangelogFile="true"/>
+    <include file="v1/2026-23-09-create-table-idempotency-keys.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
