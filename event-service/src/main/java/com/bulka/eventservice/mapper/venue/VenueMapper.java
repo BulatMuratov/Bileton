@@ -8,12 +8,14 @@ import com.bulka.eventservice.model.venue.Venue;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class VenueMapper {
 
-    public Venue toEntity(VenueDetailsRequestDto request){
+    public Venue toEntity(UUID venueId, VenueDetailsRequestDto request){
             return Venue.builder()
+                    .id(venueId)
                     .name(request.getName())
                     .description(request.getDescription())
                     .width(request.getWidth())

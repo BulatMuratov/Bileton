@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,11 +30,12 @@ public class EventController {
 
     @PostMapping
     public ResponseEntity<EventDetailsResponseDto> createEvent(
-            @Valid @RequestBody EventDetailsRequestDto requestDto
+            @Valid @RequestBody EventDetailsRequestDto requestDto,
+            @RequestHeader("Idempotency-Key") String idempotencyKey
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(eventService.createEvent(requestDto));
+                .body(eventService.createEvent(requestDto, idempotencyKey));
     }
 
     @GetMapping
@@ -41,15 +43,6 @@ public class EventController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(eventService.getEvents());
-    }
-
-    @GetMapping("/{eventId}")
-    public ResponseEntity<EventDetailsResponseDto> getEventById(
-            @PathVariable UUID eventId
-    ){
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(eventService.getEventById(eventId));
     }
 
     @PatchMapping("/{eventId}")

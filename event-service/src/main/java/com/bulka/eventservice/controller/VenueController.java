@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,11 +29,12 @@ public class VenueController {
 
     @PostMapping
     public ResponseEntity<VenueDetailsResponseDto> createVenue(
-            @RequestBody VenueDetailsRequestDto requestDto
+            @RequestBody VenueDetailsRequestDto requestDto,
+            @RequestHeader("Idempotency-Key") String idempotencyKey
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(venueService.createVenue(requestDto));
+                .body(venueService.createVenue(requestDto, idempotencyKey));
     }
 
     @GetMapping

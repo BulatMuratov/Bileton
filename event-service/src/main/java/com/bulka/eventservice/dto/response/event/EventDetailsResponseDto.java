@@ -1,6 +1,5 @@
 package com.bulka.eventservice.dto.response.event;
 
-import com.bulka.eventservice.dto.VenueSizeDto;
 import com.bulka.eventservice.model.event.EventStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

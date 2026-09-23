@@ -4,6 +4,10 @@ import com.bulka.eventservice.exception.event.EventNotFoundException;
 import com.bulka.eventservice.exception.event.EventSeatDataIntegrityException;
 import com.bulka.eventservice.exception.event.EventSeatNotFoundException;
 import com.bulka.eventservice.exception.event.InvalidEventStateException;
+import com.bulka.eventservice.exception.venue.DuplicateSeatException;
+import com.bulka.eventservice.exception.venue.DuplicateSectionException;
+import com.bulka.eventservice.exception.venue.SeatNotFoundException;
+import com.bulka.eventservice.exception.venue.SectionNotFoundException;
 import com.bulka.eventservice.exception.venue.VenueNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,17 +17,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler({VenueNotFoundException.class, EventNotFoundException.class, EventSeatNotFoundException.class})
-    public ResponseEntity<ErrorResponse> handleVenueDoesNotExistsException(VenueNotFoundException e) {
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.builder()
-                        .status(HttpStatus.NOT_FOUND.value())
-                        .error(HttpStatus.NOT_FOUND.getReasonPhrase())
-                        .message(e.getMessage())
-                        .build());
-    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
@@ -36,13 +29,41 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
+    @ExceptionHandler({
+            VenueNotFoundException.class,
+            SectionNotFoundException.class,
+            SeatNotFoundException.class,
+            EventNotFoundException.class,
+            EventSeatNotFoundException.class,
+    })
+    public ResponseEntity<ErrorResponse> handleVenueDoesNotExistsException(ResourceNotFoundException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.builder()
+                        .status(HttpStatus.NOT_FOUND.value())
+                        .error("Resource not found.")
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler({DuplicateSeatException.class, DuplicateSectionException.class})
+    public ResponseEntity<ErrorResponse> handleDuplicateException(RuntimeException e) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.builder()
+                        .status(HttpStatus.CONFLICT.value())
+                        .error("Duplicate entities.")
+                        .message(e.getMessage())
+                        .build());
+    }
+
     @ExceptionHandler(InvalidEventStateException.class)
     public ResponseEntity<ErrorResponse> handleInvalidEventStateException(InvalidEventStateException e) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.builder()
                         .status(HttpStatus.CONFLICT.value())
-                        .error(HttpStatus.CONFLICT.getReasonPhrase())
+                        .error("State exception.")
                         .message(e.getMessage())
                         .build());
     }

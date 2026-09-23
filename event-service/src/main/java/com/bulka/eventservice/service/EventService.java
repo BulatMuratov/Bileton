@@ -1,6 +1,6 @@
 package com.bulka.eventservice.service;
 
-import com.bulka.eventservice.dto.VenueSizeDto;
+import com.bulka.eventservice.dto.response.event.VenueSizeDto;
 import com.bulka.eventservice.dto.request.event.EventDetailsRequestDto;
 import com.bulka.eventservice.dto.request.event.EventInfoRequestDto;
 import com.bulka.eventservice.dto.request.event.EventSeatRequestDto;
@@ -19,6 +19,8 @@ import com.bulka.eventservice.exception.venue.VenueNotFoundException;
 import com.bulka.eventservice.mapper.event.EventMapper;
 import com.bulka.eventservice.mapper.event.EventSeatMapper;
 import com.bulka.eventservice.mapper.event.EventSectionMapper;
+import com.bulka.eventservice.model.IdempotencyKey;
+import com.bulka.eventservice.model.IdempotencyOperation;
 import com.bulka.eventservice.model.event.Event;
 import com.bulka.eventservice.model.event.EventSeat;
 import com.bulka.eventservice.model.event.EventSeatStatus;
@@ -27,6 +29,7 @@ import com.bulka.eventservice.model.event.EventStatus;
 import com.bulka.eventservice.model.venue.Seat;
 import com.bulka.eventservice.model.venue.Section;
 import com.bulka.eventservice.model.venue.Venue;
+import com.bulka.eventservice.repository.IdempotencyKeyRepository;
 import com.bulka.eventservice.repository.event.EventRepository;
 import com.bulka.eventservice.repository.event.EventSeatRepository;
 import com.bulka.eventservice.repository.event.EventSectionRepository;
@@ -55,18 +58,36 @@ public class EventService {
     private final VenueRepository venueRepository;
     private final SectionRepository sectionRepository;
     private final SeatRepository seatRepository;
+    private final IdempotencyKeyRepository idempotencyKeyRepository;
 
     private final EventMapper eventMapper;
     private final EventSectionMapper eventSectionMapper;
     private final EventSeatMapper eventSeatMapper;
 
     @Transactional
-    public EventDetailsResponseDto createEvent(EventDetailsRequestDto eventRequestDto) {
+    public EventDetailsResponseDto createEvent(EventDetailsRequestDto eventRequestDto, String idempotencyKey) {
         validateRequest(eventRequestDto);
+
+        UUID eventId = UUID.randomUUID();
+
+        int inserted = idempotencyKeyRepository.insertIfAbsent(
+                UUID.randomUUID(),
+                idempotencyKey,
+                IdempotencyOperation.CREATE_EVENT.name(),
+                eventId
+        );
+        if(inserted == 0){
+            IdempotencyKey key = idempotencyKeyRepository
+                    .findByKeyAndOperation(idempotencyKey, IdempotencyOperation.CREATE_EVENT)
+                    .orElseThrow(() -> new IllegalStateException("Idempotency key not found"));
+
+            return getEventById(key.getResourceId());
+        }
+
         Venue venue = venueRepository.findById(eventRequestDto.getVenueId())
                 .orElseThrow(() -> new VenueNotFoundException("Venue not found"));
 
-        Event event = eventMapper.toEntity(eventRequestDto, venue);
+        Event event = eventMapper.toEntity(eventId, eventRequestDto, venue);
         Event savedEvent = eventRepository.save(event);
 
         List<EventSectionDetailsResponseDto> sections = eventRequestDto.getSections()
@@ -143,67 +164,42 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public EventDetailsResponseDto getEventById(UUID eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() ->
-                        new EventNotFoundException(
-                                "Event with id " + eventId + " not found"
-                        )
-                );
+        Event event =  eventRepository.findById(eventId).orElseThrow(() ->
+                new EventNotFoundException("Venue with id " + eventId + " not found"));
+
+        List<EventSection> eventSections = eventSectionRepository.findAllByEventId(eventId);
+
+        List<EventSeat> allSeatsOfSections = eventSeatRepository.findAllByEventSectionIdIn(eventSections
+                .stream()
+                .map(EventSection::getId)
+                .toList()
+        );
+
+        Map<UUID, List<EventSeat>> eventSeatsBySectionId = allSeatsOfSections.stream()
+                .collect(Collectors.groupingBy(
+                        seat -> seat.getEventSection().getId()
+                ));
+
+        List<EventSectionDetailsResponseDto> sectionResponses = eventSections.stream()
+                .map(eventSection -> {
+                    List<EventSeatDetailsResponseDto> seatResponses = eventSeatsBySectionId.
+                            getOrDefault(eventSection.getId(), List.of())
+                            .stream()
+                            .map(eventSeat -> eventSeatMapper.toDetailsResponse(eventSeat, eventSeat.getSeat()))
+                            .toList();
+
+                    return eventSectionMapper.toDetailsResponse(eventSection, eventSection.getSection(), seatResponses);
+                })
+                .toList();
 
         VenueSizeDto venueSize = VenueSizeDto.builder()
                 .width(event.getVenue().getWidth())
                 .height(event.getVenue().getHeight())
                 .build();
 
-        List<EventSection> eventSections =
-                eventSectionRepository.findAllByEventId(eventId);
-
-        if (eventSections.isEmpty()) {
-            return eventMapper.toDetailsResponse(event, List.of(), venueSize);
-        }
-
-        List<UUID> eventSectionIds = eventSections.stream()
-                .map(EventSection::getId)
-                .toList();
-
-        List<EventSeat> eventSeats =
-                eventSeatRepository.findAllByEventSectionIdIn(eventSectionIds);
-
-        Map<UUID, List<EventSeat>> seatsBySectionId =
-                eventSeats.stream()
-                        .collect(Collectors.groupingBy(
-                                eventSeat -> eventSeat.getEventSection().getId()
-                        ));
-
-        List<EventSectionDetailsResponseDto> sectionResponses =
-                eventSections.stream()
-                        .map(eventSection -> {
-                            List<EventSeat> seats =
-                                    seatsBySectionId.getOrDefault(
-                                            eventSection.getId(),
-                                            List.of()
-                                    );
-
-                            List<EventSeatDetailsResponseDto> seatResponses =
-                                    seats.stream()
-                                            .map(eventSeat ->
-                                                    eventSeatMapper.toDetailsResponse(
-                                                            eventSeat,
-                                                            eventSeat.getSeat()
-                                                    )
-                                            )
-                                            .toList();
-
-                            return eventSectionMapper.toDetailsResponse(
-                                    eventSection,
-                                    eventSection.getSection(),
-                                    seatResponses
-                            );
-                        })
-                        .toList();
-
         return eventMapper.toDetailsResponse(event, sectionResponses, venueSize);
     }
+
 
     @Transactional
     public EventSummaryResponseDto updateEvent(UUID eventId, EventInfoRequestDto eventInfoRequestDto) {

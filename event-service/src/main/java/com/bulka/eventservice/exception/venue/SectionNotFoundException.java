@@ -1,6 +1,8 @@
 package com.bulka.eventservice.exception.venue;
 
-public class SectionNotFoundException extends RuntimeException {
+import com.bulka.eventservice.exception.ResourceNotFoundException;
+
+public class SectionNotFoundException extends ResourceNotFoundException {
     public SectionNotFoundException(String message) {
         super(message);
     }

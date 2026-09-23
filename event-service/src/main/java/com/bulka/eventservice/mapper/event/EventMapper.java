@@ -1,6 +1,6 @@
 package com.bulka.eventservice.mapper.event;
 
-import com.bulka.eventservice.dto.VenueSizeDto;
+import com.bulka.eventservice.dto.response.event.VenueSizeDto;
 import com.bulka.eventservice.dto.request.event.EventDetailsRequestDto;
 import com.bulka.eventservice.dto.response.event.EventDetailsResponseDto;
 import com.bulka.eventservice.dto.response.event.EventSectionDetailsResponseDto;
@@ -11,12 +11,14 @@ import com.bulka.eventservice.model.venue.Venue;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class EventMapper {
 
-    public Event toEntity(EventDetailsRequestDto request, Venue venue) {
+    public Event toEntity(UUID eventId, EventDetailsRequestDto request, Venue venue) {
         return Event.builder()
+                .id(eventId)
                 .venue(venue)
                 .name(request.getName())
                 .description(request.getDescription())

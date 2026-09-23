@@ -1,6 +1,8 @@
 package com.bulka.eventservice.exception.venue;
 
-public class SeatNotFoundException extends RuntimeException {
+import com.bulka.eventservice.exception.ResourceNotFoundException;
+
+public class SeatNotFoundException extends ResourceNotFoundException {
     public SeatNotFoundException(String message) {
         super(message);
     }
