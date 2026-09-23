@@ -18,6 +18,12 @@ spring:
               filters:
                 - RewritePath=/auth/(?<segment>.*), /api/v1/auth/$\{segment}
 
+            - id: event-availability
+              uri: forward:/events
+              predicates:
+                  - Path=/events/*/availability
+              order: -10
+
             - id: event-service-events
               uri: lb://event-service
               predicates:
