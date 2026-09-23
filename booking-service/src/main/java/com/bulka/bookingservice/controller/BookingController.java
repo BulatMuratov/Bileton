@@ -27,7 +27,10 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping
-    public ResponseEntity<BookingDetailsResponseDto> createBooking(@RequestBody BookingRequestDto requestDto, Authentication authentication){
+    public ResponseEntity<BookingDetailsResponseDto> createBooking(
+            @RequestBody BookingRequestDto requestDto,
+            Authentication authentication
+    ) {
         UUID userId = UUID.fromString(authentication.getName());
 
         return ResponseEntity
@@ -36,7 +39,9 @@ public class BookingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BookingInfoResponseDto>> getBookingsForUser(Authentication authentication) {
+    public ResponseEntity<List<BookingInfoResponseDto>> getBookingsForUser(
+            Authentication authentication
+    ) {
         UUID userId = UUID.fromString(authentication.getName());
 
         return ResponseEntity
@@ -45,7 +50,10 @@ public class BookingController {
     }
 
     @GetMapping("/{bookingId}")
-    public ResponseEntity<BookingDetailsResponseDto> getBookingById(@PathVariable UUID bookingId, Authentication authentication){
+    public ResponseEntity<BookingDetailsResponseDto> getBookingById(
+            @PathVariable UUID bookingId,
+            Authentication authentication
+    ) {
         UUID userId = UUID.fromString(authentication.getName());
 
         return ResponseEntity
@@ -54,7 +62,10 @@ public class BookingController {
     }
 
     @PostMapping("/{bookingId}/cancel")
-    public ResponseEntity<?> cancelBooking(@PathVariable UUID bookingId,  Authentication authentication){
+    public ResponseEntity<?> cancelBooking(
+            @PathVariable UUID bookingId,
+            Authentication authentication
+    ) {
         UUID userId = UUID.fromString(authentication.getName());
 
         return ResponseEntity

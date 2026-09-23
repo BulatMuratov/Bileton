@@ -1,6 +1,7 @@
 package com.bulka.bookingservice.client.event;
 
 import com.bulka.bookingservice.client.event.dto.EventSeatInfo;
+import com.bulka.bookingservice.client.event.dto.TicketSnapshotResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,4 +26,11 @@ public interface EventServiceClient {
             @PathVariable UUID eventId,
             @RequestBody List<UUID> eventSeatIds
     );
+
+    @GetMapping("/api/v1/internal/events/{eventId}/seats-details")
+    List<TicketSnapshotResponse> getEventSeatsDetails(
+            @PathVariable("eventId") UUID eventId,
+            @RequestParam("eventSeatIds") List<UUID> eventSeatIds
+    );
 }
+

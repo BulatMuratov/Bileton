@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 public class BookingService {
 
     private final RedisService redisService;
+    private final TicketService ticketService;
 
 //    @Value("${redis.ttl-minute}")
     private final Duration reservedTtl =  Duration.ofMinutes(10);
@@ -193,7 +194,6 @@ public class BookingService {
             System.out.printf("Expired booking not found in DB: %s\n", bookingId);
             return;
         }
-//        Booking booking = bookingOpt.get();
 
         int updated = bookingRepository.expireIfPending(
                 bookingId,
@@ -207,20 +207,12 @@ public class BookingService {
     }
 
     @Transactional
-    public void handleBookingConfirmed(PaymentSucceededEvent event){
-        int marked = processedEventRepository.markProcessed(event.getEventId());
+    public void handleBookingConfirmed(PaymentSucceededEvent event, UUID messageId) {
+        int marked = processedEventRepository.markProcessed(messageId);
         if(marked == 0){
             return;
         }
 
-//        int confirmed = bookingRepository.completedIfPending(
-//                event.getBookingId(),
-//                BookingStatus.PENDING,
-//                BookingStatus.CONFIRMED);
-//
-//        if(confirmed == 1){
-//            return;
-//        }
         Booking booking = bookingRepository.findById(event.getBookingId())
                 .orElseThrow(() -> new BookingNotFoundException("Booking with id " + event.getBookingId() + " not found"));
 
@@ -264,6 +256,7 @@ public class BookingService {
                     "Failed to confirm booking " + booking.getId()
             );
         }
+        ticketService.createTickets(booking.getId());
     }
 
     private void confirmExpiredBooking(Booking booking, List<UUID> eventSeatIds){
@@ -320,16 +313,12 @@ public class BookingService {
 
             throw e;
         }
+        ticketService.createTickets(booking.getId());
     }
 
     private void refundPayment(Booking booking){
 
     }
-
-
-
-//    @Transactional
-//    public void handleBooking
 
     private void validateEventSeats(BookingRequestDto request, List<EventSeatInfo> eventSeats) {
         List<UUID> requestedSeatIds = request.getEventSeatIds();
@@ -360,7 +349,7 @@ public class BookingService {
 
         boolean anyUnavailable = eventSeats.stream()
                 .anyMatch(seat -> seat.getStatus() != EventSeatStatus.AVAILABLE);
-        if(!anyUnavailable){
+        if(anyUnavailable){
             throw new SeatsAlreadyReservedException("Any seats are no available");
         }
     }
