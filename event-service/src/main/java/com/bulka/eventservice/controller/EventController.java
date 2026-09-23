@@ -1,6 +1,7 @@
 package com.bulka.eventservice.controller;
 
 import com.bulka.eventservice.dto.request.event.EventDetailsRequestDto;
+import com.bulka.eventservice.dto.request.event.EventFilterRequest;
 import com.bulka.eventservice.dto.request.event.EventInfoRequestDto;
 import com.bulka.eventservice.dto.response.event.EventDetailsResponseDto;
 import com.bulka.eventservice.dto.response.event.EventSummaryResponseDto;
@@ -8,9 +9,11 @@ import com.bulka.eventservice.model.event.EventType;
 import com.bulka.eventservice.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,10 +44,12 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<List<EventSummaryResponseDto>> getAllEvents(){
+    public ResponseEntity<List<EventSummaryResponseDto>> getEventsByFilter(
+            @ModelAttribute EventFilterRequest filterRequest, Pageable pageable
+    ){
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(eventService.getEvents());
+                .body(eventService.getEvents(filterRequest, pageable));
     }
 
     @GetMapping("/types")
@@ -86,13 +91,6 @@ public class EventController {
 //        return ResponseEntity
 //                .status(HttpStatus.OK)
 //                .body(eventService.getEventSeatsByEventId(eventId));
-//    }
-
-//    @GetMapping
-//    public ResponseEntity<Page<EventInfoResponseDto>> getEventsByFilters(@ModelAttribute EventFilterRequest filterRequest, Pageable pageable){
-//        return ResponseEntity
-//                .status(HttpStatus.OK)
-//                .body(eventService.getEvents(filterRequest, pageable));
 //    }
 
 }

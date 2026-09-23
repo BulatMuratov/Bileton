@@ -1,5 +1,6 @@
 package com.bulka.eventservice.service;
 
+import com.bulka.eventservice.dto.request.event.EventFilterRequest;
 import com.bulka.eventservice.dto.response.event.VenueSizeDto;
 import com.bulka.eventservice.dto.request.event.EventDetailsRequestDto;
 import com.bulka.eventservice.dto.request.event.EventInfoRequestDto;
@@ -37,10 +38,13 @@ import com.bulka.eventservice.repository.OutboxEventRepository;
 import com.bulka.eventservice.repository.event.EventRepository;
 import com.bulka.eventservice.repository.event.EventSeatRepository;
 import com.bulka.eventservice.repository.event.EventSectionRepository;
+import com.bulka.eventservice.repository.specification.EventSpecifications;
 import com.bulka.eventservice.repository.venue.SeatRepository;
 import com.bulka.eventservice.repository.venue.SectionRepository;
 import com.bulka.eventservice.repository.venue.VenueRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -162,8 +166,40 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
-    public List<EventSummaryResponseDto> getEvents() {
-        List<Event> events = eventRepository.findAll();
+    public List<EventSummaryResponseDto> getEvents(EventFilterRequest filter, Pageable pageable) {
+        Specification<Event> specification =
+                (root, query, cb) -> cb.conjunction();
+        if (filter.getFrom() != null) {
+            specification = specification.and(
+                    EventSpecifications.startAtAfterOrEqual(filter.getFrom())
+            );
+        }
+
+        if (filter.getTo() != null) {
+            specification = specification.and(
+                    EventSpecifications.startAtBeforeOrEqual(filter.getTo())
+            );
+        }
+
+        if (filter.getEventType() != null) {
+            specification = specification.and(
+                    EventSpecifications.hasEventType(filter.getEventType())
+            );
+        }
+
+        if (filter.getStatus() != null) {
+            specification = specification.and(
+                    EventSpecifications.hasStatus(filter.getStatus())
+            );
+        }
+
+        if (filter.getVenueId() != null) {
+            specification = specification.and(
+                    EventSpecifications.hasVenueId(filter.getVenueId())
+            );
+        }
+
+        List<Event> events = eventRepository.findAll(specification);
 
         return events.stream()
                 .map(eventMapper::toSummaryResponse)

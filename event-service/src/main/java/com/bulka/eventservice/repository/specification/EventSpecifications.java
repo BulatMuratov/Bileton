@@ -2,6 +2,7 @@ package com.bulka.eventservice.repository.specification;
 
 import com.bulka.eventservice.model.event.Event;
 import com.bulka.eventservice.model.event.EventStatus;
+import com.bulka.eventservice.model.event.EventType;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.OffsetDateTime;
@@ -20,6 +21,11 @@ public final class EventSpecifications {
                 cb.equal(root.get("venue").get("id"), venueId);
     }
 
+    public static Specification<Event> hasEventType(EventType eventType) {
+        return (root, query, cb) ->
+                cb.equal(root.get("eventType"), eventType);
+    }
+
     public static Specification<Event> startAtAfterOrEqual(OffsetDateTime from) {
         return (root, query, cb) ->
                 cb.greaterThanOrEqualTo(root.get("startAt"), from);
@@ -27,6 +33,6 @@ public final class EventSpecifications {
 
     public static Specification<Event> startAtBeforeOrEqual(OffsetDateTime to) {
         return (root, query, cb) ->
-                cb.lessThanOrEqualTo(root.get("startAt"), to);
+                cb.lessThanOrEqualTo(root.get("endAt"), to);
     }
 }
