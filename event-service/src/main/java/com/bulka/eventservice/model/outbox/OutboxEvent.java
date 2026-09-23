@@ -1,13 +1,14 @@
-package com.bulka.eventservice.model.idempotency;
+package com.bulka.eventservice.model.outbox;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,37 +19,38 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(
-        name = "idempotency_keys",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_idempotency_keys_key_operation",
-                        columnNames = {"key", "operation"}
-                )
-        }
-)
+@Table(name = "outbox_events")
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class IdempotencyKey {
+@Builder
+public class OutboxEvent {
 
     @Id
     private UUID id;
 
-    @Column(name = "key", nullable = false, length = 100)
-    private String key;
+    @Column(name = "event_type", nullable = false, length = 100)
+    private String eventType;
+
+    @Column(name = "aggregate_type", nullable = false, length = 100)
+    private String aggregateType;
+
+    @Column(name = "aggregate_id", nullable = false)
+    private UUID aggregateId;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String payload;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private IdempotencyOperation operation;
-
-    @Column(name = "resource_id", nullable = false)
-    private UUID resourceId;
+    private OutboxEventStatus status;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
+
+    @Column(name = "published_at")
+    private OffsetDateTime publishedAt;
 
     @PrePersist
     protected void onCreate() {

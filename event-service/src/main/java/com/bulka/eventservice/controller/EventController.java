@@ -4,6 +4,7 @@ import com.bulka.eventservice.dto.request.event.EventDetailsRequestDto;
 import com.bulka.eventservice.dto.request.event.EventInfoRequestDto;
 import com.bulka.eventservice.dto.response.event.EventDetailsResponseDto;
 import com.bulka.eventservice.dto.response.event.EventSummaryResponseDto;
+import com.bulka.eventservice.model.event.EventType;
 import com.bulka.eventservice.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,6 +45,13 @@ public class EventController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(eventService.getEvents());
+    }
+
+    @GetMapping("/types")
+    public ResponseEntity<List<EventType>> getAllEventTypes(){
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(Arrays.asList(EventType.values()));
     }
 
     @PatchMapping("/{eventId}")

@@ -1,5 +1,6 @@
 package com.bulka.eventservice.dto.internal.response;
 
+import com.bulka.eventservice.model.event.EventSeatStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,4 +16,5 @@ import java.util.UUID;
 public class EventSeatInfoDto {
     private UUID eventSeatId;
     private BigDecimal price;
+    private EventSeatStatus status;
 }

@@ -27,9 +27,13 @@ spring:
     enabled: true
     change-log: db/changelog/db.changelog-master.xml
 
-#  security:
-#    oauth2:
-#      resourceserver:
+  kafka:
+    bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
 jwt:
   public-key-path: classpath:keys/public_key.pem
 

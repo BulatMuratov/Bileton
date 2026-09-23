@@ -1,7 +1,7 @@
 package com.bulka.eventservice.repository;
 
-import com.bulka.eventservice.model.IdempotencyKey;
-import com.bulka.eventservice.model.IdempotencyOperation;
+import com.bulka.eventservice.model.idempotency.IdempotencyKey;
+import com.bulka.eventservice.model.idempotency.IdempotencyOperation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

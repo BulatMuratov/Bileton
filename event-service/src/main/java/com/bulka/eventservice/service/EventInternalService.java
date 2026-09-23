@@ -122,11 +122,14 @@ public class EventInternalService {
         if(eventSeats.size() != eventSeatIds.size()) {
             throw new EventSeatNotFoundException("Some event seats do not belong to event " + eventId);
         }
-
+        for(EventSeat eventSeat : eventSeats) {
+            System.out.println(eventSeat.getStatus());
+        }
         return eventSeats.stream()
                 .map(eventSeat -> EventSeatInfoDto.builder()
                         .eventSeatId(eventSeat.getId())
                         .price(eventSeat.getPrice())
+                        .status(eventSeat.getStatus())
                         .build())
                 .toList();
     }
@@ -139,7 +142,7 @@ public class EventInternalService {
 
         return eventSeats.stream()
                 .map(eventSeat -> EventSeatDetailsInfoDto.builder()
-                        .eventId(eventSeat.getId())
+                        .eventId(event.getId())
                         .eventName(event.getName())
                         .eventStartAt(event.getStartAt())
                         .eventEndAt(event.getEndAt())

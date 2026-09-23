@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="008-add-event-type-to-events" author="Bulat">
+        <addColumn tableName="events">
+            <column name="event_type" type="VARCHAR(50)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="009-fill-event-type-for-existing-events" author="Bulat">
+        <update tableName="events">
+            <column name="event_type" value="OTHER"/>
+            <where>event_type IS NULL</where>
+        </update>
+    </changeSet>
+
+
+    <changeSet id="010-make-event-type-not-null" author="bulat">
+
+        <addNotNullConstraint
+                tableName="events"
+                columnName="event_type"
+                columnDataType="VARCHAR(50)"/>
+
+    </changeSet>
+    
+</databaseChangeLog>

@@ -60,6 +60,10 @@ public class Event {
     @Column(nullable = false, length = 50)
     private EventStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "event_type", nullable = false, length = 50)
+    private EventType eventType;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 

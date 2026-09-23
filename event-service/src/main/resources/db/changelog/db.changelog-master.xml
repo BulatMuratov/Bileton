@@ -10,5 +10,8 @@
     <include file="v1/2026-06-09-create-table-events.xml" relativeToChangelogFile="true"/>
     <include file="v1/2026-06-09-create-table-event-sections.xml" relativeToChangelogFile="true"/>
     <include file="v1/2026-06-09-create-table-event-seats.xml" relativeToChangelogFile="true"/>
+    <include file="v1/2026-23-09-create-table-idempotency-keys.xml" relativeToChangelogFile="true"/>
+    <include file="v1/2026-23-09-table-event-add-type.xml" relativeToChangelogFile="true"/>
+    <include file="v1/2026-23-09-create-table-outbox-events.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

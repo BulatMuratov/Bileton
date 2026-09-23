@@ -1,5 +1,6 @@
 package com.bulka.eventservice.dto.request.event;
 
+import com.bulka.eventservice.model.event.EventType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -35,6 +36,9 @@ public class EventDetailsRequestDto {
 
     @NotNull
     private OffsetDateTime endAt;
+
+    @NotNull
+    private EventType eventType;
 
     @NotEmpty
     private List<@Valid EventSectionRequestDto> sections;

@@ -25,6 +25,7 @@ public class EventMapper {
                 .startAt(request.getStartAt())
                 .endAt(request.getEndAt())
                 .status(EventStatus.DRAFT)
+                .eventType(request.getEventType())
                 .build();
     }
 
@@ -37,6 +38,7 @@ public class EventMapper {
                 .startAt(event.getStartAt())
                 .endAt(event.getEndAt())
                 .status(event.getStatus())
+                .eventType(event.getEventType())
                 .createdAt(event.getCreatedAt())
                 .updatedAt(event.getUpdatedAt())
                 .build();
@@ -58,6 +60,7 @@ public class EventMapper {
                 .startAt(event.getStartAt())
                 .endAt(event.getEndAt())
                 .status(event.getStatus())
+                .eventType(event.getEventType())
                 .createdAt(event.getCreatedAt())
                 .updatedAt(event.getUpdatedAt())
                 .sections(sections)

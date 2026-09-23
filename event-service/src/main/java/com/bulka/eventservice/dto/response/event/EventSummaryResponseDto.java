@@ -1,6 +1,7 @@
 package com.bulka.eventservice.dto.response.event;
 
 import com.bulka.eventservice.model.event.EventStatus;
+import com.bulka.eventservice.model.event.EventType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -25,6 +26,7 @@ public class EventSummaryResponseDto {
     private OffsetDateTime startAt;
     private OffsetDateTime endAt;
     private EventStatus status;
+    private EventType eventType;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

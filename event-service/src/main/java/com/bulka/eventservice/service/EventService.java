@@ -16,20 +16,24 @@ import com.bulka.eventservice.exception.venue.DuplicateSeatException;
 import com.bulka.eventservice.exception.venue.SeatNotFoundException;
 import com.bulka.eventservice.exception.venue.SectionNotFoundException;
 import com.bulka.eventservice.exception.venue.VenueNotFoundException;
+import com.bulka.eventservice.kafka.event.EventUpdated;
+import com.bulka.eventservice.kafka.outbox.OutboxEventFactory;
 import com.bulka.eventservice.mapper.event.EventMapper;
 import com.bulka.eventservice.mapper.event.EventSeatMapper;
 import com.bulka.eventservice.mapper.event.EventSectionMapper;
-import com.bulka.eventservice.model.IdempotencyKey;
-import com.bulka.eventservice.model.IdempotencyOperation;
+import com.bulka.eventservice.model.idempotency.IdempotencyKey;
+import com.bulka.eventservice.model.idempotency.IdempotencyOperation;
 import com.bulka.eventservice.model.event.Event;
 import com.bulka.eventservice.model.event.EventSeat;
 import com.bulka.eventservice.model.event.EventSeatStatus;
 import com.bulka.eventservice.model.event.EventSection;
 import com.bulka.eventservice.model.event.EventStatus;
+import com.bulka.eventservice.model.outbox.OutboxEvent;
 import com.bulka.eventservice.model.venue.Seat;
 import com.bulka.eventservice.model.venue.Section;
 import com.bulka.eventservice.model.venue.Venue;
 import com.bulka.eventservice.repository.IdempotencyKeyRepository;
+import com.bulka.eventservice.repository.OutboxEventRepository;
 import com.bulka.eventservice.repository.event.EventRepository;
 import com.bulka.eventservice.repository.event.EventSeatRepository;
 import com.bulka.eventservice.repository.event.EventSectionRepository;
@@ -58,11 +62,15 @@ public class EventService {
     private final VenueRepository venueRepository;
     private final SectionRepository sectionRepository;
     private final SeatRepository seatRepository;
+
     private final IdempotencyKeyRepository idempotencyKeyRepository;
+    private final OutboxEventRepository outboxEventRepository;
 
     private final EventMapper eventMapper;
     private final EventSectionMapper eventSectionMapper;
     private final EventSeatMapper eventSeatMapper;
+
+    private final OutboxEventFactory outboxEventFactory;
 
     @Transactional
     public EventDetailsResponseDto createEvent(EventDetailsRequestDto eventRequestDto, String idempotencyKey) {
@@ -218,6 +226,23 @@ public class EventService {
         if (eventInfoRequestDto.getEndAt() != null) {
             event.setEndAt(eventInfoRequestDto.getEndAt());
         }
+
+        EventUpdated updatedEvent = EventUpdated.builder()
+                .eventId(eventId)
+                .name(event.getName())
+                .startAt(event.getStartAt())
+                .endAt(event.getEndAt())
+                .build();
+
+
+        outboxEventRepository.save(outboxEventFactory.create(
+                UUID.randomUUID(),
+                "EVENT_UPDATED",
+                "EVENT",
+                event.getId(),
+                updatedEvent
+                )
+        );
 
         return eventMapper.toSummaryResponse(event);
     }
