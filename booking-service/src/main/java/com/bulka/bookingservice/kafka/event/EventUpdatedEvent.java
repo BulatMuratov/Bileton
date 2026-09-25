@@ -1,4 +1,4 @@
-package com.bulka.bookingservice.kafka.dto;
+package com.bulka.bookingservice.kafka.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

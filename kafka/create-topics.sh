@@ -7,6 +7,7 @@ BOOTSTRAP_SERVERS="kafka-1:19092,kafka-2:19092,kafka-3:19092"
 TOPICS=(
   "payments.lifecycle"
   "events.lifecycle"
+  "bookings.lifecycle"
 )
 
 echo "Waiting for Kafka..."

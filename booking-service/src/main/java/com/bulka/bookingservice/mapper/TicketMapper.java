@@ -2,7 +2,7 @@ package com.bulka.bookingservice.mapper;
 
 import com.bulka.bookingservice.dto.response.TicketDetailsResponse;
 import com.bulka.bookingservice.dto.response.TicketSummaryResponse;
-import com.bulka.bookingservice.model.Ticket;
+import com.bulka.bookingservice.model.ticket.Ticket;
 import org.springframework.stereotype.Component;
 
 @Component

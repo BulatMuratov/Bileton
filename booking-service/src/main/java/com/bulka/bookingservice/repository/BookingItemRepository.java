@@ -1,6 +1,6 @@
 package com.bulka.bookingservice.repository;
 
-import com.bulka.bookingservice.model.BookingItem;
+import com.bulka.bookingservice.model.booking.BookingItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

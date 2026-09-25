@@ -1,4 +1,4 @@
-package com.bulka.bookingservice.model;
+package com.bulka.bookingservice.model.booking;
 
 public enum BookingStatus {
     PENDING,

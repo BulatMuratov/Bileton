@@ -8,6 +8,7 @@ import com.bulka.eventservice.dto.response.event.EventSeatDetailsResponseDto;
 import com.bulka.eventservice.dto.response.event.EventSectionDetailsResponseDto;
 import com.bulka.eventservice.exception.event.EventNotFoundException;
 import com.bulka.eventservice.exception.event.EventSeatNotFoundException;
+import com.bulka.eventservice.exception.event.SeatsNotAvailableException;
 import com.bulka.eventservice.mapper.event.EventMapper;
 import com.bulka.eventservice.mapper.event.EventSeatMapper;
 import com.bulka.eventservice.mapper.event.EventSectionMapper;
@@ -103,13 +104,30 @@ public class EventInternalService {
     }
 
     @Transactional
-    public boolean sellSeats(UUID eventId, List<UUID> eventSeatIds){
+    public void sellSeats(UUID eventId, List<UUID> eventSeatIds){
         int updated = eventSeatRepository.sellAvailableSeats(
                 eventId,
                 eventSeatIds
         );
 
-        return updated == eventSeatIds.size();
+        if(updated != eventSeatIds.size()){
+            throw new SeatsNotAvailableException("Not all seats are available");
+        }
+//        return updated == eventSeatIds.size();
+    }
+
+    @Transactional
+    public boolean cancelSellSeats(UUID eventId, List<UUID> eventSeatIds){
+        int updated = eventSeatRepository.cancelSellSeats(
+                eventId,
+                eventSeatIds
+        );
+
+        if (updated != eventSeatIds.size()) {
+            throw new IllegalStateException(
+                    "Failed to cancel sale for all seats"
+            );
+        }
     }
 
     @Transactional(readOnly = true)

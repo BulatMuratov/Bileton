@@ -1,10 +1,8 @@
 package com.bulka.bookingservice.kafka.consumer;
 
-import com.bulka.bookingservice.kafka.dto.PaymentFailedEvent;
-import com.bulka.bookingservice.kafka.dto.PaymentSucceededEvent;
+import com.bulka.bookingservice.kafka.event.PaymentSucceededEvent;
 import com.bulka.bookingservice.service.BookingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;

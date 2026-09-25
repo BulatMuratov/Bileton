@@ -4,6 +4,7 @@ import com.bulka.eventservice.exception.event.EventNotFoundException;
 import com.bulka.eventservice.exception.event.EventSeatDataIntegrityException;
 import com.bulka.eventservice.exception.event.EventSeatNotFoundException;
 import com.bulka.eventservice.exception.event.InvalidEventStateException;
+import com.bulka.eventservice.exception.event.SeatsNotAvailableException;
 import com.bulka.eventservice.exception.venue.DuplicateSeatException;
 import com.bulka.eventservice.exception.venue.DuplicateSectionException;
 import com.bulka.eventservice.exception.venue.SeatNotFoundException;
@@ -64,6 +65,17 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.builder()
                         .status(HttpStatus.CONFLICT.value())
                         .error("State exception.")
+                        .message(e.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(SeatsNotAvailableException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidEventStateException(SeatsNotAvailableException e) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.builder()
+                        .status(HttpStatus.CONFLICT.value())
+                        .error("Seats not available.")
                         .message(e.getMessage())
                         .build());
     }

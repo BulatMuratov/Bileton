@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentResult {
+public class RefundResult {
     private PaymentProviderStatus status;
-    private String providerPaymentId;
+    private String refundId;
     private String failureReason;
 }

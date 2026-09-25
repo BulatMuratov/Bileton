@@ -14,13 +14,17 @@ import com.bulka.bookingservice.exception.booking.IllegalStateException;
 import com.bulka.bookingservice.exception.booking.ReservationNotFoundException;
 import com.bulka.bookingservice.exception.booking.SeatValidationException;
 import com.bulka.bookingservice.exception.booking.SeatsAlreadyReservedException;
-import com.bulka.bookingservice.kafka.dto.PaymentSucceededEvent;
-import com.bulka.bookingservice.model.Booking;
-import com.bulka.bookingservice.model.BookingItem;
-import com.bulka.bookingservice.model.BookingStatus;
+import com.bulka.bookingservice.kafka.event.PaymentSucceededEvent;
+import com.bulka.bookingservice.kafka.event.PaymentRefundEvent;
+import com.bulka.bookingservice.kafka.outbox.OutboxEventFactory;
+import com.bulka.bookingservice.model.booking.Booking;
+import com.bulka.bookingservice.model.booking.BookingItem;
+import com.bulka.bookingservice.model.booking.BookingStatus;
 import com.bulka.bookingservice.repository.BookingItemRepository;
 import com.bulka.bookingservice.repository.BookingRepository;
+import com.bulka.bookingservice.repository.OutboxEventRepository;
 import com.bulka.bookingservice.repository.ProcessedEventRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +54,8 @@ public class BookingService {
     private final ProcessedEventRepository processedEventRepository;
 
     private final EventServiceClient eventServiceClient;
+    private final OutboxEventFactory outboxEventFactory;
+    private final OutboxEventRepository outboxEventRepository;
 
     @Transactional
     public BookingDetailsResponseDto createBooking(UUID userId, BookingRequestDto request){
@@ -195,7 +201,7 @@ public class BookingService {
             return;
         }
 
-        int updated = bookingRepository.expireIfPending(
+        int updated = bookingRepository.updateStatusIfCurrent(
                 bookingId,
                 BookingStatus.PENDING,
                 BookingStatus.EXPIRED
@@ -224,42 +230,65 @@ public class BookingService {
             case CONFIRMED -> {
                 return;
             }
-            case PENDING -> confirmPendingBooking(booking, eventSeatIds);
-            case EXPIRED -> confirmExpiredBooking(booking, eventSeatIds);
+            case PENDING -> confirmPendingBooking(booking, eventSeatIds, event);
+            case EXPIRED -> confirmExpiredBooking(booking, eventSeatIds, event);
             case CANCELLED -> {
-                refundPayment(booking);
+                refundPayment(booking, event);
             }
             default -> throw new IllegalStateException("Unexpected value: " + booking.getStatus());
         }
     }
 
-    private void confirmPendingBooking(Booking booking, List<UUID> eventSeatIds){
-        boolean sold = eventServiceClient.sellSeats(
-                booking.getEventId(),
-                eventSeatIds
-        );
-
-        if (!sold) {
-            throw new IllegalStateException(
-                    "Failed to sell seats for booking " + booking.getId()
+    private void confirmPendingBooking(Booking booking, List<UUID> eventSeatIds,  PaymentSucceededEvent event) {
+        try {
+            eventServiceClient.sellSeats(
+                    booking.getEventId(),
+                    eventSeatIds
             );
+        } catch (FeignException.Conflict e){
+            refundPayment(booking, event);
+            cancelBooking(booking);
+            return;
         }
 
-        int confirmed = bookingRepository.confirmIfPending(
-                booking.getId(),
-                BookingStatus.PENDING,
-                BookingStatus.CONFIRMED
-        );
 
-        if (confirmed == 0) {
-            throw new IllegalStateException(
-                    "Failed to confirm booking " + booking.getId()
+        try {
+            int confirmed = bookingRepository.updateStatusIfCurrent(
+                    booking.getId(),
+                    BookingStatus.PENDING,
+                    BookingStatus.CONFIRMED
             );
+
+
+            if (confirmed == 0) {
+                throw new IllegalStateException(
+                        "Failed to confirm booking " + booking.getId()
+                );
+            }
+            ticketService.createTickets(booking.getId());
+        } catch (RuntimeException e) {
+            try {
+                eventServiceClient.cancelSellSeats(
+                        booking.getEventId(),
+                        eventSeatIds
+                );
+            } catch (Exception compensationException) {
+                e.addSuppressed(compensationException);
+            }
+
+            throw e;
         }
-        ticketService.createTickets(booking.getId());
     }
 
-    private void confirmExpiredBooking(Booking booking, List<UUID> eventSeatIds){
+    private void cancelBooking(Booking booking) {
+        bookingRepository.updateStatusIfCurrent(
+                booking.getId(),
+                BookingStatus.PENDING,
+                BookingStatus.CANCELLED
+        );
+    }
+
+    private void confirmExpiredBooking(Booking booking, List<UUID> eventSeatIds,  PaymentSucceededEvent event) {
         boolean reserved = redisService.reserve(
                 booking.getId(),
                 booking.getEventId(),
@@ -267,28 +296,19 @@ public class BookingService {
         );
 
         if (!reserved) {
-            refundPayment(booking);
+            refundPayment(booking, event);
             return;
         }
 
+        boolean sold = false;
         try {
-            boolean sold = eventServiceClient.sellSeats(
+            eventServiceClient.sellSeats(
                     booking.getEventId(),
                     eventSeatIds
             );
+            sold = true;
 
-            if (!sold) {
-                redisService.release(
-                        booking.getId(),
-                        booking.getEventId(),
-                        eventSeatIds
-                );
-
-                refundPayment(booking);
-                return;
-            }
-
-            int confirmed = bookingRepository.confirmIfExpired(
+            int confirmed = bookingRepository.updateStatusIfCurrent(
                     booking.getId(),
                     BookingStatus.EXPIRED,
                     BookingStatus.CONFIRMED
@@ -299,8 +319,18 @@ public class BookingService {
                         "Failed to confirm expired booking " + booking.getId()
                 );
             }
+            ticketService.createTickets(booking.getId());
 
         } catch (RuntimeException e) {
+            if(sold){
+                try{
+                    eventServiceClient.cancelSellSeats(
+                            booking.getEventId(),
+                            eventSeatIds);
+                } catch (Exception compensationException) {
+                    e.addSuppressed(compensationException);
+                }
+            }
             try {
                 redisService.release(
                         booking.getId(),
@@ -313,11 +343,26 @@ public class BookingService {
 
             throw e;
         }
-        ticketService.createTickets(booking.getId());
     }
 
-    private void refundPayment(Booking booking){
+    private void refundPayment(Booking booking, PaymentSucceededEvent event) {
+        PaymentRefundEvent paymentRefundEvent = PaymentRefundEvent.builder()
+                .eventId(event.getEventId())
+                .paymentId(event.getPaymentId())
+                .bookingId(event.getBookingId())
+                .userId(event.getUserId())
+                .amount(event.getAmount())
+                .currency(event.getCurrency())
+                .build();
 
+
+        outboxEventFactory.create(
+                UUID.randomUUID(),
+                "PaymentRefunded",
+                "Payment",
+                event.getPaymentId(),
+                paymentRefundEvent
+        );
     }
 
     private void validateEventSeats(BookingRequestDto request, List<EventSeatInfo> eventSeats) {

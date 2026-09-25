@@ -1,5 +1,7 @@
-package com.bulka.bookingservice.model;
+package com.bulka.bookingservice.model.ticket;
 
+import com.bulka.bookingservice.model.booking.Booking;
+import com.bulka.bookingservice.model.booking.BookingItem;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

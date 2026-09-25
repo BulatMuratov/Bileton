@@ -1,7 +1,7 @@
 package com.bulka.bookingservice.config;
 
-import com.bulka.bookingservice.kafka.dto.EventUpdatedEvent;
-import com.bulka.bookingservice.kafka.dto.PaymentSucceededEvent;
+import com.bulka.bookingservice.kafka.event.EventUpdatedEvent;
+import com.bulka.bookingservice.kafka.event.PaymentSucceededEvent;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.context.annotation.Bean;

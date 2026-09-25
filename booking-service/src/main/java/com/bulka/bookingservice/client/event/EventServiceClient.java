@@ -22,7 +22,14 @@ public interface EventServiceClient {
     );
 
     @PostMapping("/api/v1/internal/events/{eventId}/seats/sell")
-    boolean sellSeats(
+    void sellSeats(
+            @PathVariable UUID eventId,
+            @RequestBody List<UUID> eventSeatIds
+    );
+
+
+    @PostMapping("/api/v1/internal/events/{eventId}/seats/cancelSell")
+    void cancelSellSeats(
             @PathVariable UUID eventId,
             @RequestBody List<UUID> eventSeatIds
     );

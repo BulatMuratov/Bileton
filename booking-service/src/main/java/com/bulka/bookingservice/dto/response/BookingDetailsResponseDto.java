@@ -1,6 +1,6 @@
 package com.bulka.bookingservice.dto.response;
 
-import com.bulka.bookingservice.model.BookingStatus;
+import com.bulka.bookingservice.model.booking.BookingStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

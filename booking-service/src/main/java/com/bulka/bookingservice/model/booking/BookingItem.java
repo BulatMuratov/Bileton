@@ -1,4 +1,4 @@
-package com.bulka.bookingservice.model;
+package com.bulka.bookingservice.model.booking;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

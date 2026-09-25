@@ -1,4 +1,4 @@
-package com.bulka.bookingservice.kafka.dto;
+package com.bulka.bookingservice.kafka.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,11 +12,12 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentSucceededEvent {
+public class PaymentFailedEvent {
     private UUID eventId;
     private UUID paymentId;
     private UUID bookingId;
     private UUID userId;
     private BigDecimal amount;
     private String currency;
+    private String failureReason;
 }

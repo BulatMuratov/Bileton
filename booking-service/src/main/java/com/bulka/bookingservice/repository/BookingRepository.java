@@ -1,7 +1,7 @@
 package com.bulka.bookingservice.repository;
 
-import com.bulka.bookingservice.model.Booking;
-import com.bulka.bookingservice.model.BookingStatus;
+import com.bulka.bookingservice.model.booking.Booking;
+import com.bulka.bookingservice.model.booking.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,40 +16,14 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     @Modifying
     @Query("""
-    update Booking b
-    set b.status = :expired
-    where b.id = :bookingId
-      and b.status = :pending
-    """)
-    int expireIfPending(
-            UUID bookingId,
-            BookingStatus pending,
-            BookingStatus expired
-    );
-
-    @Modifying
-    @Query("""
-    update Booking b
-    set b.status = :confirmed
-    where b.id = :bookingId
-    and b.status = :pending
-        """)
-    int confirmIfPending(
-            UUID bookingId,
-            BookingStatus pending,
-            BookingStatus confirmed
-    );
-
-    @Modifying
-    @Query("""
         update Booking b
-        set b.status = :confirmed
+        set b.status = :newStatus
         where b.id = :bookingId
-          and b.status = :expired
+          and b.status = :currentStatus
         """)
-    int confirmIfExpired(
+    int updateStatusIfCurrent(
             UUID bookingId,
-            BookingStatus expired,
-            BookingStatus confirmed
+            BookingStatus currentStatus,
+            BookingStatus newStatus
     );
 }

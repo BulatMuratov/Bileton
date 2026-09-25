@@ -5,6 +5,8 @@ import com.bulka.paymentservice.model.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,4 +15,5 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     boolean existsByBookingIdAndStatus(UUID bookingId, PaymentStatus paymentStatus);
     List<Payment> findAllByUserId(UUID userId);
+    List<Payment> findTop100ByStatusAndCreatedAtBeforeOrderByCreatedAtAsc(PaymentStatus paymentStatus, OffsetDateTime createdAt);
 }

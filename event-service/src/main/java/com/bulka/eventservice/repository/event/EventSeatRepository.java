@@ -41,4 +41,16 @@ public interface EventSeatRepository extends JpaRepository<EventSeat, UUID> {
           AND es.status = 'AVAILABLE'
         """, nativeQuery = true)
     int sellAvailableSeats(UUID eventId, List<UUID> eventSeatIds);
+
+    @Modifying
+    @Query(value = """
+        UPDATE event_seats es
+        SET status = 'AVAILABLE'
+        FROM event_sections esec
+        WHERE es.event_section_id = esec.id
+          AND esec.event_id = :eventId
+          AND es.id IN (:eventSeatIds)
+          AND es.status = 'SOLD'
+        """, nativeQuery = true)
+    int cancelSellSeats(UUID eventId, List<UUID> eventSeatIds);
 }

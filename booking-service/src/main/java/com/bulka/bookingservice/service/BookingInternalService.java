@@ -3,7 +3,7 @@ package com.bulka.bookingservice.service;
 import com.bulka.bookingservice.dto.internal.response.BookingPaymentDetailsResponse;
 import com.bulka.bookingservice.dto.internal.response.ReservedSeatsResponse;
 import com.bulka.bookingservice.exception.booking.BookingNotFoundException;
-import com.bulka.bookingservice.model.Booking;
+import com.bulka.bookingservice.model.booking.Booking;
 import com.bulka.bookingservice.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,9 +1,8 @@
 package com.bulka.bookingservice.kafka.consumer;
 
-import com.bulka.bookingservice.kafka.dto.EventUpdatedEvent;
+import com.bulka.bookingservice.kafka.event.EventUpdatedEvent;
 import com.bulka.bookingservice.service.TicketService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
