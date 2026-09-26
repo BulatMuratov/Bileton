@@ -48,7 +48,7 @@ class AuthControllerTest {
     public void register_shouldReturnCreated() throws Exception {
         RegistrationRequestDto request = RegistrationRequestDto.builder()
                 .email("murat@mail.ru")
-                .password("1234")
+                .password("12345678")
                 .firstName("Murat")
                 .lastName("Murat")
                 .build();
@@ -70,7 +70,7 @@ class AuthControllerTest {
                 .content("""
                         {
                             "email": "murat@mail.ru",
-                            "password": "1234",
+                            "password": "12345678",
                             "firstName": "Murat",
                             "lastName": "Murat"
                         }
@@ -82,7 +82,7 @@ class AuthControllerTest {
     public void register_shouldReturn409_whenEmailAlreadyExists() throws Exception {
         RegistrationRequestDto request = RegistrationRequestDto.builder()
                 .email("murat@mail.ru")
-                .password("1234")
+                .password("12345678")
                 .firstName("Murat")
                 .lastName("Murat")
                 .build();
@@ -96,7 +96,7 @@ class AuthControllerTest {
                         .content("""
                         {
                             "email": "murat@mail.ru",
-                            "password": "1234",
+                            "password": "12345678",
                             "firstName": "Murat",
                             "lastName": "Murat"
                         }
@@ -113,7 +113,7 @@ class AuthControllerTest {
     public void login_shouldReturnTokens() throws Exception {
         LoginRequestDto request = LoginRequestDto.builder()
                 .email("murat@mail.ru")
-                .password("1234")
+                .password("12345678")
                 .build();
 
         TokenResponse tokenResponse = TokenResponse.builder()
@@ -128,7 +128,7 @@ class AuthControllerTest {
                 .content("""
                         {
                             "email": "murat@mail.ru",
-                            "password": "1234"
+                            "password": "12345678"
                         }
                         """))
                 .andExpect(status().isOk())
@@ -140,7 +140,7 @@ class AuthControllerTest {
     public void login_shouldReturn401_whenEmailDoesNotExist() throws Exception {
         LoginRequestDto request = LoginRequestDto.builder()
                 .email("murat@mail.ru")
-                .password("1234")
+                .password("12345678")
                 .build();
 
         when(authService.login(request)).thenThrow(
@@ -152,7 +152,7 @@ class AuthControllerTest {
                 .content("""
                         {
                             "email": "murat@mail.ru",
-                            "password": "1234"
+                            "password": "12345678"
                         }
                         """))
                 .andExpect(status().isUnauthorized())
@@ -167,7 +167,7 @@ class AuthControllerTest {
     public void login_shouldReturn401_whenPasswordDoesNotMatch() throws Exception {
         LoginRequestDto request = LoginRequestDto.builder()
                 .email("murat@mail.ru")
-                .password("1234")
+                .password("12345678")
                 .build();
 
         when(authService.login(request)).thenThrow(
@@ -179,7 +179,7 @@ class AuthControllerTest {
                         .content("""
                         {
                             "email": "murat@mail.ru",
-                            "password": "1234"
+                            "password": "12345678"
                         }
                         """))
                 .andExpect(status().isUnauthorized())

@@ -82,8 +82,8 @@ public class SecurityFlowTest {
     @Test
     public void security_shouldAllowLoginWithoutAuthentication() throws Exception {
         LoginRequestDto loginRequestDto = LoginRequestDto.builder()
-                .email("email")
-                .password("password")
+                .email("email@mail.ru")
+                .password("password1")
                 .build();
         TokenResponse response = TokenResponse.builder()
                 .accessToken("valid-access-token")
@@ -95,8 +95,8 @@ public class SecurityFlowTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "email": "email",
-                                    "password": "password"
+                                    "email": "email@mail.ru",
+                                    "password": "password1"
                                 }
                                 """))
                 .andExpect(status().isOk());
@@ -113,8 +113,8 @@ public class SecurityFlowTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "email": "email",
-                                    "password": "password",
+                                    "email": "email@mail.ru",
+                                    "password": "password1",
                                     "firstName": "firstName",
                                     "lastName": "lastName"
                                 }
