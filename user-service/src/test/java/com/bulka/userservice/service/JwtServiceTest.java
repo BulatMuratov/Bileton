@@ -20,14 +20,9 @@ class JwtServiceTest {
 
     @BeforeEach
     void setUp() {
-        Resource privateKey =
-                new ClassPathResource(
-                        "keys/private_key.pem"
-        );
-        Resource publicKey =
-                new ClassPathResource(
-                        "keys/public_key.pem"
-        );
+        Resource privateKey = new ClassPathResource("keys/test_private_key.pem");
+        Resource publicKey = new ClassPathResource("keys/test_public_key.pem");
+
         jwtService =
                 new JwtService(
                         privateKey,
