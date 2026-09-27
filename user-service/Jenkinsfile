@@ -1,0 +1,23 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build & Test') {
+            steps {
+                dir('user-service') {
+                    sh './gradlew clean build'
+                }
+            }
+        }
+
+        stage('Docker build') {
+            steps {
+                dir('user-service') {
+                    sh 'docker build -t bileton-user-service:${BUILD_NUMBER} .'
+                }
+
+            }
+
+        }
+    }
+}
