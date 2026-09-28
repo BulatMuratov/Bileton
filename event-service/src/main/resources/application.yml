@@ -35,10 +35,10 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 jwt:
-  public-key-path: classpath:keys/public_key.pem
+  public-key-path: ${JWT_PUBLIC_KEY_PATH}
 
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}

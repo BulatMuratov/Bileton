@@ -117,7 +117,7 @@ public class EventInternalService {
     }
 
     @Transactional
-    public boolean cancelSellSeats(UUID eventId, List<UUID> eventSeatIds){
+    public void cancelSellSeats(UUID eventId, List<UUID> eventSeatIds){
         int updated = eventSeatRepository.cancelSellSeats(
                 eventId,
                 eventSeatIds
