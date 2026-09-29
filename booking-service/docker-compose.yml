@@ -1,22 +1,22 @@
 services:
 
-  user-service:
+  booking-service:
     build:
       context: .
       dockerfile: Dockerfile
     env_file:
       - .env.docker
     ports:
-      - "8081:8081"
+      - "8083:8083"
     networks:
       - default
       - eureka-net
     depends_on:
-      - user-postgres-db
-      - user-redis
+      - booking-postgres-db
+      - booking-redis
 
 
-  user-postgres-db:
+  booking-postgres-db:
     image: postgres:18
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -25,10 +25,10 @@ services:
     ports:
       - "5433:5432"
 
-  user-redis:
+  booking-redis:
     image: redis:8
-    ports:
-      - "6379:6379"
+#    ports:
+#      - "6379:6379"
 
 networks:
   eureka-net:

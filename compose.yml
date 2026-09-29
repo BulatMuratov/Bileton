@@ -1,0 +1,7 @@
+include:
+  - ./kafka/docker-compose.kafka.yml
+  - ./discovery-service/docker-compose.yml
+  - ./user-service/docker-compose.yml
+  - ./event-service/docker-compose.yml
+  - ./payment-service/docker-compose.yml
+  - ./booking-service/docker-compose.yml

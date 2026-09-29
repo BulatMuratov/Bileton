@@ -8,6 +8,9 @@ services:
     ports:
       - "9092:9092"
 
+    networks:
+      - kafka-net
+
     volumes:
       - kafka-1-data:/var/lib/kafka/data
 
@@ -53,6 +56,9 @@ services:
     ports:
       - "9093:9092"
 
+    networks:
+      - kafka-net
+
     volumes:
       - kafka-2-data:/var/lib/kafka/data
 
@@ -97,6 +103,9 @@ services:
     ports:
       - "9094:9092"
 
+    networks:
+      - kafka-net
+
     volumes:
       - kafka-3-data:/var/lib/kafka/data
 
@@ -135,6 +144,9 @@ services:
     image: apache/kafka:4.1.2
     container_name: kafka-init
 
+    networks:
+      - kafka-net
+
     depends_on:
       - kafka-1
       - kafka-2
@@ -147,6 +159,9 @@ services:
       - /bin/bash
       - /create-topics.sh
 
+networks:
+  kafka-net:
+    external: true
 
 volumes:
   kafka-1-data:

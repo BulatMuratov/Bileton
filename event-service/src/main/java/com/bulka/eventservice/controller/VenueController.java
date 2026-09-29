@@ -5,6 +5,8 @@ import com.bulka.eventservice.dto.request.venue.VenueInfoRequestDto;
 import com.bulka.eventservice.dto.response.venue.VenueDetailsResponseDto;
 import com.bulka.eventservice.dto.response.venue.VenueSummaryResponseDto;
 import com.bulka.eventservice.service.VenueService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +31,8 @@ public class VenueController {
 
     @PostMapping
     public ResponseEntity<VenueDetailsResponseDto> createVenue(
-            @RequestBody VenueDetailsRequestDto requestDto,
-            @RequestHeader("Idempotency-Key") String idempotencyKey
+            @RequestBody @Valid VenueDetailsRequestDto requestDto,
+            @RequestHeader("Idempotency-Key") @NotBlank String idempotencyKey
     ) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -56,7 +58,7 @@ public class VenueController {
     @PatchMapping("/{id}")
     public ResponseEntity<VenueSummaryResponseDto> updateVenueInfo(
             @PathVariable UUID id,
-            @RequestBody VenueInfoRequestDto request
+            @RequestBody @Valid VenueInfoRequestDto request
     ){
         return ResponseEntity
                 .status(HttpStatus.OK)

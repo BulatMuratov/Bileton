@@ -1,34 +1,32 @@
 services:
 
-  user-service:
+  payment-service:
     build:
       context: .
       dockerfile: Dockerfile
     env_file:
       - .env.docker
     ports:
-      - "8081:8081"
+      - "8084:8084"
     networks:
       - default
       - eureka-net
+
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19092,kafka-3:19092
+
     depends_on:
-      - user-postgres-db
-      - user-redis
+      - payment-postgres-db
 
 
-  user-postgres-db:
+  payment-postgres-db:
     image: postgres:18
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5433:5432"
-
-  user-redis:
-    image: redis:8
-    ports:
-      - "6379:6379"
+      - "5436:5432"
 
 networks:
   eureka-net:

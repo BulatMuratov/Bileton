@@ -12,9 +12,9 @@ spring:
     name: booking-service
 
   datasource:
-    url: ${BOOKING_DATASOURCE_URL}
-    username: ${BOOKING_DB_USER}
-    password: ${BOOKING_DB_PASSWORD}
+    url: ${DATASOURCE_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -27,14 +27,16 @@ spring:
       init-commands:
         notify-keyspace-events: "Ex"
 
-      host: localhost
-      port: 6379
-      password: ${REDIS_PASSWORD}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
   liquibase:
     enabled: true
     change-log: db/changelog/db.changelog-master.xml
 
   kafka:
+    bootstrap-servers: kafka-1:19092,kafka-2:19092,kafka-3:19092
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
@@ -51,4 +53,4 @@ redis:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}

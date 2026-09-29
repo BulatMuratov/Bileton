@@ -45,6 +45,7 @@ import com.bulka.eventservice.repository.venue.VenueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,6 +77,7 @@ public class EventService {
 
     private final OutboxEventFactory outboxEventFactory;
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     public EventDetailsResponseDto createEvent(EventDetailsRequestDto eventRequestDto, String idempotencyKey) {
         validateRequest(eventRequestDto);
@@ -244,7 +246,7 @@ public class EventService {
         return eventMapper.toDetailsResponse(event, sectionResponses, venueSize);
     }
 
-
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     public EventSummaryResponseDto updateEvent(UUID eventId, EventInfoRequestDto eventInfoRequestDto) {
         Event event = eventRepository.findById(eventId)
@@ -377,6 +379,7 @@ public class EventService {
 //                .build();
 //    }
 //
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     public EventSummaryResponseDto publishEvent(UUID eventId) {
         Event event = eventRepository.findById(eventId)
@@ -390,6 +393,7 @@ public class EventService {
         return eventMapper.toSummaryResponse(event);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     public EventSummaryResponseDto cancelEvent(UUID eventId) {
         Event event = eventRepository.findById(eventId)

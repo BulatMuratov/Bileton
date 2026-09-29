@@ -1,0 +1,14 @@
+services:
+
+  discovery-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    networks:
+      - eureka-net
+
+networks:
+  eureka-net:
+    external: true
