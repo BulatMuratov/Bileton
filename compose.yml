@@ -1,11 +1,13 @@
 include:
   - ./kafka/docker-compose.kafka.yml
   - ./discovery-service/docker-compose.yml
+  - path: ./api-gateway/docker-compose.yml
+    env_file: ./api-gateway/.env.docker.example
   - path: ./user-service/docker-compose.yml
-    env_file: ./user-service/.env.docker
+    env_file: ./user-service/.env.docker.example
   - path: ./event-service/docker-compose.yml
-    env_file: ./event-service/.env.docker
+    env_file: ./event-service/.env.docker.example
   - path: ./payment-service/docker-compose.yml
-    env_file: ./payment-service/.env.docker
+    env_file: ./payment-service/.env.docker.example
   - path: ./booking-service/docker-compose.yml
-    env_file: ./booking-service/.env.docker
+    env_file: ./booking-service/.env.docker.example

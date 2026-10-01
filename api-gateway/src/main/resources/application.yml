@@ -7,7 +7,6 @@ spring:
 
   cloud:
     gateway:
-#      routes:
       server:
         webflux:
           routes:
@@ -45,20 +44,22 @@ spring:
               filters:
                 - RewritePath=/payments(?<segment>/.*)?, /api/v1/payments$\{segment}
 
-            - id: booking-service
+            - id: booking-service-bookings
               uri: lb://booking-service
               predicates:
                 - Path=/bookings,/bookings/**
               filters:
                 - RewritePath=/bookings(?<segment>/.*)?, /api/v1/bookings$\{segment}
-
-#            - id: payment-service
-#              uri: lb://payment-service
-#              predicates:
-#                - Path=/
+            
+            - id: booking-service-tickets
+              uri: lb://booking-service
+              predicates:
+                - Path=/tickets,/tickets/**
+              filters:
+                - RewritePath=/tickets(?<segment>/.*)?, /api/v1/tickets$\{segment}
 
 jwt:
-  public-key-path: classpath:keys/public_key.pem
+  public-key-path: ${JWT_PUBLIC_KEY_PATH}
 
 logging:
   level:
@@ -69,5 +70,5 @@ logging:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
 
