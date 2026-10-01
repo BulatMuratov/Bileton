@@ -48,6 +48,7 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
     private final PaymentEventMapper paymentEventMapper;
 
+    @Transactional
     public PaymentResponseDto createPayment(UUID userId, String idempotencyKey, CreatePaymentRequest request){
         UUID paymentId = preparePayment(userId, idempotencyKey, request);
 

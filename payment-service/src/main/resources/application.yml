@@ -28,7 +28,7 @@ spring:
     change-log: db/changelog/db.changelog-master.xml
 
   kafka:
-    bootstrap-servers: kafka-1:19092,kafka-2:19092,kafka-3:19092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka-1:19092,kafka-2:19092,kafka-3:19092}
     producer:
       acks: all
       key-serializer: org.apache.kafka.common.serialization.StringSerializer

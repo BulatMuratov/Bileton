@@ -1,7 +1,11 @@
 include:
   - ./kafka/docker-compose.kafka.yml
   - ./discovery-service/docker-compose.yml
-  - ./user-service/docker-compose.yml
-  - ./event-service/docker-compose.yml
-  - ./payment-service/docker-compose.yml
-  - ./booking-service/docker-compose.yml
+  - path: ./user-service/docker-compose.yml
+    env_file: ./user-service/.env.docker
+  - path: ./event-service/docker-compose.yml
+    env_file: ./event-service/.env.docker
+  - path: ./payment-service/docker-compose.yml
+    env_file: ./payment-service/.env.docker
+  - path: ./booking-service/docker-compose.yml
+    env_file: ./booking-service/.env.docker
