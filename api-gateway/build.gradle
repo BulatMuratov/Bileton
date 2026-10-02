@@ -21,7 +21,8 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-//	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
+	implementation 'org.springdoc:springdoc-openapi-webflux-ui:1.7.0'
+	//	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

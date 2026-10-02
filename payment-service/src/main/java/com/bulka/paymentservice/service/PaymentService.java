@@ -117,7 +117,7 @@ public class PaymentService {
     public void updatePaymentFailed(UUID paymentId, String reason) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() ->
-                        new IllegalStateException("Payment not found: " + paymentId));
+                        new PaymentNotFoundException("Payment not found: " + paymentId));
 
         if (payment.getStatus() != PaymentStatus.PENDING) {
             return;

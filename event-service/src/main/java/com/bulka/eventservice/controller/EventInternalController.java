@@ -4,6 +4,7 @@ import com.bulka.eventservice.dto.internal.response.EventSeatDetailsInfoDto;
 import com.bulka.eventservice.dto.internal.response.EventSeatInfoDto;
 import com.bulka.eventservice.dto.response.event.EventDetailsResponseDto;
 import com.bulka.eventservice.service.EventInternalService;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+@Hidden
 @RestController
 @RequestMapping("/api/v1/internal/events/")
 @RequiredArgsConstructor

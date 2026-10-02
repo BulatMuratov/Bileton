@@ -58,6 +58,47 @@ spring:
               filters:
                 - RewritePath=/tickets(?<segment>/.*)?, /api/v1/tickets$\{segment}
 
+            - id: swagger-user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/swagger/user
+              filters:
+                - RewritePath=/swagger/user, /v3/api-docs
+
+            - id: swagger-event-service
+              uri: lb://event-service
+              predicates:
+                - Path=/swagger/event
+              filters:
+                - RewritePath=/swagger/event, /v3/api-docs
+
+            - id: swagger-booking-service
+              uri: lb://booking-service
+              predicates:
+                - Path=/swagger/booking
+              filters:
+                - RewritePath=/swagger/booking, /v3/api-docs
+
+            - id: swagger-payment-service
+              uri: lb://payment-service
+              predicates:
+                - Path=/swagger/payment
+              filters:
+                - RewritePath=/swagger/payment, /v3/api-docs
+
+
+springdoc:
+  swagger-ui:
+#    path: /swagger-ui.html
+    urls:
+      - name: User Service
+        url: /swagger/user
+      - name: Event Service
+        url: /swagger/event
+      - name: Booking Service
+        url: /swagger/booking
+      - name: Payment Service
+        url: /swagger/payment
 jwt:
   public-key-path: ${JWT_PUBLIC_KEY_PATH}
 

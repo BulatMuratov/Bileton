@@ -3,6 +3,7 @@ package com.bulka.bookingservice.controller;
 import com.bulka.bookingservice.dto.internal.response.BookingPaymentDetailsResponse;
 import com.bulka.bookingservice.dto.internal.response.ReservedSeatsResponse;
 import com.bulka.bookingservice.service.BookingInternalService;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
+@Hidden
 @RestController
 @RequestMapping("/api/v1/internal/bookings")
 @RequiredArgsConstructor

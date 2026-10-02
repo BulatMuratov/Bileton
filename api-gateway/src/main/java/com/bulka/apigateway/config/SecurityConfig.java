@@ -40,6 +40,10 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
+                    .pathMatchers("/swagger-ui.html",
+                            "/swagger-ui/**",
+                            "/swagger/**",
+                            "/favicon.ico").permitAll()
                     .pathMatchers("/auth/**").permitAll()
                     .anyExchange().authenticated()
                 )

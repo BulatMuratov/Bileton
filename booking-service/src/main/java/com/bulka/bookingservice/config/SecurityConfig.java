@@ -38,6 +38,13 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html",
+                                        "/v3/api-docs/**",
+                                        "/v3/api-docs.yaml",
+                                        "/api-docs/**"
+                                ).permitAll()
                         .requestMatchers("/api/v1/internal/**").permitAll()
 
                         .requestMatchers("/api/v1/**")
