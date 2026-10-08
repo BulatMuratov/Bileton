@@ -3,6 +3,7 @@ package com.bulka.bookingservice.service;
 import com.bulka.bookingservice.client.event.EventServiceClient;
 import com.bulka.bookingservice.client.event.dto.EventSeatInfo;
 import com.bulka.bookingservice.client.event.dto.EventSeatStatus;
+import com.bulka.bookingservice.dto.projection.BookingDetailsProjection;
 import com.bulka.bookingservice.dto.request.BookingRequestDto;
 import com.bulka.bookingservice.dto.response.BookingDetailsResponseDto;
 import com.bulka.bookingservice.dto.response.BookingInfoResponseDto;
@@ -128,35 +129,49 @@ public class BookingService {
     }
 
     public List<BookingInfoResponseDto> getBookingsByUser(UUID userId){
-        List<Booking> bookingList = bookingRepository.findAllByUserId(userId);
-
-        return bookingList.stream()
-                .map(this::toInfoResponse)
+        return bookingRepository.findInfoByUserId(userId)
+                .stream()
+                .map(booking -> BookingInfoResponseDto.builder()
+                        .id(booking.id())
+                        .eventId(booking.eventId())
+                        .status(booking.status())
+                        .totalPrice(booking.totalPrice())
+                        .createdAt(booking.createdAt())
+                        .build())
                 .toList();
     }
 
     public BookingDetailsResponseDto getBookingById(UUID bookingId, UUID userId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException("Booking with id " + bookingId + " not found"));
+        BookingDetailsProjection booking =
+                bookingRepository.findDetailsById(bookingId)
+                        .orElseThrow(() ->
+                                new BookingNotFoundException(
+                                        "Booking with id " + bookingId + " not found"
+                                )
+                        );
 
-        if(!booking.getUserId().equals(userId)){
-            throw new ForbiddenException("Access denied: this booking belongs to another user");
+        if (!booking.userId().equals(userId)) {
+            throw new ForbiddenException(
+                    "Access denied: this booking belongs to another user"
+            );
         }
 
-        List<BookingItem> bookingItems = bookingItemRepository.findAllByBookingId(bookingId);
+        List<EventSeatResponseDto> items =
+                bookingItemRepository.findDetailsByBookingId(bookingId)
+                        .stream()
+                        .map(item -> EventSeatResponseDto.builder()
+                                .eventSeatId(item.eventSeatId())
+                                .price(item.price())
+                                .build())
+                        .toList();
 
         return BookingDetailsResponseDto.builder()
-                .id(booking.getId())
-                .eventId(booking.getEventId())
-                .status(booking.getStatus())
-                .totalPrice(booking.getTotalPrice())
-                .createdAt(booking.getCreatedAt())
-                .items(bookingItems.stream()
-                        .map(bookingItem ->EventSeatResponseDto.builder()
-                                .eventSeatId(bookingItem.getEventSeatId())
-                                .price(bookingItem.getPrice())
-                                .build())
-                        .toList())
+                .id(booking.id())
+                .eventId(booking.eventId())
+                .status(booking.status())
+                .totalPrice(booking.totalPrice())
+                .createdAt(booking.createdAt())
+                .items(items)
                 .build();
     }
 

@@ -1,4 +1,4 @@
-package com.bulka.eventservice.dto.internal.response;
+package com.bulka.eventservice.dto.response.internal;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

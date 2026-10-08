@@ -1,7 +1,7 @@
 package com.bulka.eventservice.controller;
 
-import com.bulka.eventservice.dto.internal.response.EventSeatDetailsInfoDto;
-import com.bulka.eventservice.dto.internal.response.EventSeatInfoDto;
+import com.bulka.eventservice.dto.response.internal.EventSeatDetailsInfoDto;
+import com.bulka.eventservice.dto.response.internal.EventSeatInfoDto;
 import com.bulka.eventservice.dto.response.event.EventDetailsResponseDto;
 import com.bulka.eventservice.service.EventInternalService;
 import io.swagger.v3.oas.annotations.Hidden;

@@ -2,8 +2,8 @@ package com.bulka.bookingservice.service;
 
 import com.bulka.bookingservice.dto.internal.response.BookingPaymentDetailsResponse;
 import com.bulka.bookingservice.dto.internal.response.ReservedSeatsResponse;
+import com.bulka.bookingservice.dto.projection.BookingPaymentDetailsProjection;
 import com.bulka.bookingservice.exception.booking.BookingNotFoundException;
-import com.bulka.bookingservice.model.booking.Booking;
 import com.bulka.bookingservice.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,13 +18,18 @@ public class BookingInternalService {
     private final RedisService redisService;
 
     public BookingPaymentDetailsResponse getBookingPaymentDetails(UUID bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException("Booking not found " + bookingId));
+        BookingPaymentDetailsProjection booking =
+                bookingRepository.findPaymentDetailsById(bookingId)
+                        .orElseThrow(() ->
+                                new BookingNotFoundException(
+                                        "Booking not found " + bookingId
+                                )
+                        );
 
         return BookingPaymentDetailsResponse.builder()
-                .bookingId(booking.getId())
-                .userId(booking.getUserId())
-                .amount(booking.getTotalPrice())
+                .bookingId(booking.bookingId())
+                .userId(booking.userId())
+                .amount(booking.amount())
                 .currency("RUB")
                 .build();
     }

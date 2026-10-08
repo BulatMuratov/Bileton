@@ -1,7 +1,9 @@
 package com.bulka.eventservice.mapper.venue;
 
+import com.bulka.eventservice.dto.projection.venue.SeatDetailsProjection;
 import com.bulka.eventservice.dto.request.venue.SeatRequestDto;
 import com.bulka.eventservice.dto.response.venue.SeatResponseDto;
+import com.bulka.eventservice.model.venue.LayoutPosition;
 import com.bulka.eventservice.model.venue.Seat;
 import com.bulka.eventservice.model.venue.Section;
 import org.springframework.stereotype.Component;
@@ -14,24 +16,40 @@ public class SeatMapper {
                 .section(section)
                 .rowNumber(request.getRowNumber())
                 .seatNumber(request.getSeatNumber())
-                .x(request.getX())
-                .y(request.getY())
-                .width(request.getWidth())
-                .height(request.getHeight())
-                .rotation(request.getRotation())
+                .layout(LayoutPosition.builder()
+                        .x(request.getX())
+                        .y(request.getY())
+                        .width(request.getWidth())
+                        .height(request.getHeight())
+                        .rotation(request.getRotation())
+                        .build())
+                .build();
+    }
+
+    public SeatResponseDto toSeatResponse(SeatDetailsProjection seat) {
+        return SeatResponseDto.builder()
+                .id(seat.id())
+                .rowNumber(seat.rowNumber())
+                .seatNumber(seat.seatNumber())
+                .x(seat.x())
+                .y(seat.y())
+                .width(seat.width())
+                .height(seat.height())
+                .rotation(seat.rotation())
                 .build();
     }
 
     public SeatResponseDto toResponse(Seat seat) {
+        LayoutPosition layout = seat.getLayout();
         return SeatResponseDto.builder()
                 .id(seat.getId())
                 .rowNumber(seat.getRowNumber())
                 .seatNumber(seat.getSeatNumber())
-                .x(seat.getX())
-                .y(seat.getY())
-                .width(seat.getWidth())
-                .height(seat.getHeight())
-                .rotation(seat.getRotation())
+                .x(layout.getX())
+                .y(layout.getY())
+                .width(layout.getWidth())
+                .height(layout.getHeight())
+                .rotation(layout.getRotation())
                 .build();
     }
 }

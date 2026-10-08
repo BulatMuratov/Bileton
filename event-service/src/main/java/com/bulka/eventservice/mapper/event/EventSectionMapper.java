@@ -1,5 +1,6 @@
 package com.bulka.eventservice.mapper.event;
 
+import com.bulka.eventservice.dto.projection.event.EventSectionDetailsProjection;
 import com.bulka.eventservice.dto.response.event.EventSeatDetailsResponseDto;
 import com.bulka.eventservice.dto.response.event.EventSectionDetailsResponseDto;
 import com.bulka.eventservice.model.event.Event;
@@ -19,7 +20,24 @@ public class EventSectionMapper {
                 .build();
     }
 
-    public EventSectionDetailsResponseDto toDetailsResponse(
+    public EventSectionDetailsResponseDto toDetailsResponseFromProjection(
+            EventSectionDetailsProjection eventSection,
+            List<EventSeatDetailsResponseDto> eventSeats) {
+        return EventSectionDetailsResponseDto.builder()
+                .id(eventSection.id())
+                .eventId(eventSection.eventId())
+                .sectionId(eventSection.sectionId())
+                .name(eventSection.name())
+                .x(eventSection.x())
+                .y(eventSection.y())
+                .width(eventSection.width())
+                .height(eventSection.height())
+                .rotation(eventSection.rotation())
+                .seats(eventSeats)
+                .build();
+    }
+
+    public EventSectionDetailsResponseDto toDetailsResponseFromEntity(
             EventSection eventSection,
             Section section,
             List<EventSeatDetailsResponseDto> eventSeats) {
@@ -28,11 +46,11 @@ public class EventSectionMapper {
                 .eventId(eventSection.getEvent().getId())
                 .sectionId(section.getId())
                 .name(section.getName())
-                .x(section.getX())
-                .y(section.getY())
-                .width(section.getWidth())
-                .height(section.getHeight())
-                .rotation(section.getRotation())
+                .x(section.getLayout().getX())
+                .y(section.getLayout().getY())
+                .width(section.getLayout().getWidth())
+                .height(section.getLayout().getHeight())
+                .rotation(section.getLayout().getRotation())
                 .seats(eventSeats)
                 .build();
 

@@ -1,5 +1,6 @@
 package com.bulka.eventservice.mapper.event;
 
+import com.bulka.eventservice.dto.projection.event.EventDetailsProjection;
 import com.bulka.eventservice.dto.response.event.VenueSizeDto;
 import com.bulka.eventservice.dto.request.event.EventDetailsRequestDto;
 import com.bulka.eventservice.dto.response.event.EventDetailsResponseDto;
@@ -45,7 +46,31 @@ public class EventMapper {
 
     }
 
-    public EventDetailsResponseDto toDetailsResponse(
+    public EventDetailsResponseDto toDetailsResponseFromProjection(
+            EventDetailsProjection event,
+            List<EventSectionDetailsResponseDto> sections,
+            VenueSizeDto venueSize
+    ) {
+        return EventDetailsResponseDto.builder()
+                .id(event.id())
+                .venueId(event.venueId())
+                .venueSize(VenueSizeDto.builder()
+                        .width(venueSize.getWidth())
+                        .height(venueSize.getHeight())
+                        .build())
+                .name(event.name())
+                .description(event.description())
+                .startAt(event.startAt())
+                .endAt(event.endAt())
+                .status(event.status())
+                .eventType(event.eventType())
+                .createdAt(event.createdAt())
+                .updatedAt(event.updatedAt())
+                .sections(sections)
+                .build();
+    }
+
+    public EventDetailsResponseDto toDetailsResponseFromEntity(
             Event event,
             List<EventSectionDetailsResponseDto> sections,
             VenueSizeDto venueSize

@@ -1,5 +1,8 @@
 package com.bulka.eventservice.service;
 
+import com.bulka.eventservice.dto.projection.event.EventDetailsProjection;
+import com.bulka.eventservice.dto.projection.event.EventSeatDetailsProjection;
+import com.bulka.eventservice.dto.projection.event.EventSectionDetailsProjection;
 import com.bulka.eventservice.dto.request.event.EventFilterRequest;
 import com.bulka.eventservice.dto.response.event.VenueSizeDto;
 import com.bulka.eventservice.dto.request.event.EventDetailsRequestDto;
@@ -110,11 +113,11 @@ public class EventService {
                 .toList();
 
         VenueSizeDto venueSize = VenueSizeDto.builder()
-                .width(venue.getWidth())
-                .height(venue.getHeight())
+                .width(venue.getDimensions().getWidth())
+                .height(venue.getDimensions().getHeight())
                 .build();
 
-        return eventMapper.toDetailsResponse(savedEvent, sections, venueSize);
+        return eventMapper.toDetailsResponseFromEntity(savedEvent, sections, venueSize);
 
     }
 
@@ -161,10 +164,10 @@ public class EventService {
         List<EventSeat> savedEventSeats = eventSeatRepository.saveAll(eventSeats);
 
         List<EventSeatDetailsResponseDto> seatResponses = savedEventSeats.stream()
-                .map(eventSeat -> eventSeatMapper.toDetailsResponse(eventSeat, eventSeat.getSeat()))
+                .map(eventSeat -> eventSeatMapper.toDetailsResponseFromEntity(eventSeat, eventSeat.getSeat()))
                 .toList();
 
-        return eventSectionMapper.toDetailsResponse(savedEventSection, section, seatResponses);
+        return eventSectionMapper.toDetailsResponseFromEntity(savedEventSection, section, seatResponses);
     }
 
     @Transactional(readOnly = true)
@@ -210,40 +213,49 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public EventDetailsResponseDto getEventById(UUID eventId) {
-        Event event =  eventRepository.findById(eventId).orElseThrow(() ->
-                new EventNotFoundException("Venue with id " + eventId + " not found"));
+        EventDetailsProjection event = eventRepository.findDetailsById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event with id " + eventId + " not found"));
 
-        List<EventSection> eventSections = eventSectionRepository.findAllByEventId(eventId);
-
-        List<EventSeat> allSeatsOfSections = eventSeatRepository.findAllByEventSectionIdIn(eventSections
-                .stream()
-                .map(EventSection::getId)
-                .toList()
-        );
-
-        Map<UUID, List<EventSeat>> eventSeatsBySectionId = allSeatsOfSections.stream()
-                .collect(Collectors.groupingBy(
-                        seat -> seat.getEventSection().getId()
-                ));
-
-        List<EventSectionDetailsResponseDto> sectionResponses = eventSections.stream()
-                .map(eventSection -> {
-                    List<EventSeatDetailsResponseDto> seatResponses = eventSeatsBySectionId.
-                            getOrDefault(eventSection.getId(), List.of())
-                            .stream()
-                            .map(eventSeat -> eventSeatMapper.toDetailsResponse(eventSeat, eventSeat.getSeat()))
-                            .toList();
-
-                    return eventSectionMapper.toDetailsResponse(eventSection, eventSection.getSection(), seatResponses);
-                })
-                .toList();
-
-        VenueSizeDto venueSize = VenueSizeDto.builder()
-                .width(event.getVenue().getWidth())
-                .height(event.getVenue().getHeight())
+        VenueSizeDto venueSizeDto = VenueSizeDto.builder()
+                .width(event.venueWidth())
+                .height(event.venueHeight())
                 .build();
 
-        return eventMapper.toDetailsResponse(event, sectionResponses, venueSize);
+        List<EventSectionDetailsProjection> sections =
+                eventSectionRepository.findDetailsByEventId(eventId);
+
+        if (sections.isEmpty()) {
+            return eventMapper.toDetailsResponseFromProjection(event, List.of(), venueSizeDto);
+        }
+
+        List<UUID> eventSectionIds = sections.stream()
+                .map(EventSectionDetailsProjection::id)
+                .toList();
+
+        List<EventSeatDetailsProjection> seats =
+                eventSeatRepository.findDetailsByEventSectionIds(eventSectionIds);
+
+        Map<UUID, List<EventSeatDetailsProjection>> seatsBySection =
+                seats.stream()
+                        .collect(Collectors.groupingBy(
+                                EventSeatDetailsProjection::eventSectionId
+                        ));
+
+        List<EventSectionDetailsResponseDto> sectionResponses =
+                sections.stream()
+                        .map(section -> eventSectionMapper.toDetailsResponseFromProjection(
+                                section,
+                                seatsBySection.getOrDefault(
+                                                section.id(),
+                                                List.of()
+                                        ).stream()
+                                        .map(eventSeatMapper::toDetailsResponseFromProjection)
+                                        .toList()
+                                )
+                        )
+                        .toList();
+
+        return eventMapper.toDetailsResponseFromProjection(event, sectionResponses, venueSizeDto);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

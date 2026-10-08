@@ -1,5 +1,7 @@
 package com.bulka.bookingservice.mapper;
 
+import com.bulka.bookingservice.dto.projection.TicketDetailsProjection;
+import com.bulka.bookingservice.dto.projection.TicketSummaryProjection;
 import com.bulka.bookingservice.dto.response.TicketDetailsResponse;
 import com.bulka.bookingservice.dto.response.TicketSummaryResponse;
 import com.bulka.bookingservice.model.ticket.Ticket;
@@ -8,39 +10,39 @@ import org.springframework.stereotype.Component;
 @Component
 public class TicketMapper {
 
-    public TicketSummaryResponse toSummaryResponse(Ticket ticket) {
+    public TicketSummaryResponse toSummaryResponseFromProjection(TicketSummaryProjection ticket) {
         return TicketSummaryResponse.builder()
-                .id(ticket.getId())
-                .ticketNumber(ticket.getTicketNumber())
-                .eventName(ticket.getEventName())
-                .eventStartAt(ticket.getEventStartAt())
-                .eventEndAt(ticket.getEventEndAt())
-                .venueName(ticket.getVenueName())
-                .sectionName(ticket.getSectionName())
-                .rowNumber(ticket.getRowNumber())
-                .seatNumber(ticket.getSeatNumber())
-                .price(ticket.getPrice())
-                .status(ticket.getStatus())
+                .id(ticket.id())
+                .ticketNumber(ticket.ticketNumber())
+                .eventName(ticket.eventName())
+                .eventStartAt(ticket.eventStartAt())
+                .eventEndAt(ticket.eventEndAt())
+                .venueName(ticket.venueName())
+                .sectionName(ticket.sectionName())
+                .rowNumber(ticket.rowNumber())
+                .seatNumber(ticket.seatNumber())
+                .price(ticket.price())
+                .status(ticket.status())
                 .build();
     }
 
-    public TicketDetailsResponse toDetailsResponse(Ticket ticket) {
+    public TicketDetailsResponse toDetailsResponseFromProjection(TicketDetailsProjection ticket) {
         return TicketDetailsResponse.builder()
-                .id(ticket.getId())
-                .ticketNumber(ticket.getTicketNumber())
-                .bookingId(ticket.getBooking().getId())
-                .eventId(ticket.getEventId())
-                .eventName(ticket.getEventName())
-                .eventStartAt(ticket.getEventStartAt())
-                .eventEndAt(ticket.getEventEndAt())
-                .venueName(ticket.getVenueName())
-                .sectionName(ticket.getSectionName())
-                .currency(ticket.getCurrency())
-                .rowNumber(ticket.getRowNumber())
-                .seatNumber(ticket.getSeatNumber())
-                .price(ticket.getPrice())
-                .status(ticket.getStatus())
-                .createdAt(ticket.getCreatedAt())
+                .id(ticket.id())
+                .ticketNumber(ticket.ticketNumber())
+                .bookingId(ticket.bookingId())
+                .eventId(ticket.eventId())
+                .eventName(ticket.eventName())
+                .eventStartAt(ticket.eventStartAt())
+                .eventEndAt(ticket.eventEndAt())
+                .venueName(ticket.venueName())
+                .sectionName(ticket.sectionName())
+                .currency(ticket.currency())
+                .rowNumber(ticket.rowNumber())
+                .seatNumber(ticket.seatNumber())
+                .price(ticket.price())
+                .status(ticket.status())
+                .createdAt(ticket.createdAt())
                 .build();
     }
 

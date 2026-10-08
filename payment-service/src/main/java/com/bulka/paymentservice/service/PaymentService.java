@@ -2,6 +2,7 @@ package com.bulka.paymentservice.service;
 
 import com.bulka.paymentservice.client.booking.BookingServiceClient;
 import com.bulka.paymentservice.client.booking.dto.BookingPaymentDetailsResponse;
+import com.bulka.paymentservice.dto.projection.PaymentProjection;
 import com.bulka.paymentservice.dto.request.CreatePaymentRequest;
 import com.bulka.paymentservice.dto.response.PaymentResponseDto;
 import com.bulka.paymentservice.exception.PaymentCannotCreateException;
@@ -148,7 +149,7 @@ public class PaymentService {
                 .orElseThrow();
 
         if (payment.getStatus() != PaymentStatus.PENDING) {
-            return toResponse(payment);
+            return toResponseFromEntity(payment);
         }
 
         switch (result.getStatus()) {
@@ -190,7 +191,7 @@ public class PaymentService {
             case PENDING, UNKNOWN -> {
             }
         }
-        return toResponse(payment);
+        return toResponseFromEntity(payment);
     }
 
     public void handleRefundEvent(PaymentRefundEvent event, UUID messageId) {
@@ -330,23 +331,38 @@ public class PaymentService {
 
     @Transactional(readOnly = true)
     public PaymentResponseDto getPayment(UUID paymentId, UUID userId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new PaymentNotFoundException("Payment with id " + paymentId + " not found"));
-        if (!payment.getUserId().equals(userId)) {
-            throw new PaymentNotFoundException("Payment with id " + paymentId + " not found");
-        }
+        PaymentProjection payment = paymentRepository
+                .findByIdAndUserId(paymentId, userId)
+                .orElseThrow(() ->
+                        new PaymentNotFoundException(
+                                "Payment with id " + paymentId + " not found"
+                        )
+                );
 
-        return toResponse(payment);
+        return toResponseFromProjection(payment);
     }
 
     @Transactional(readOnly = true)
     public List<PaymentResponseDto> getPayments(UUID userId) {
-        return paymentRepository.findAllByUserId(userId).stream()
-                .map(this::toResponse)
+        return paymentRepository.findAllProjectionByUserId(userId)
+                .stream()
+                .map(this::toResponseFromProjection)
                 .toList();
     }
 
-    private PaymentResponseDto toResponse(Payment payment) {
+    private PaymentResponseDto toResponseFromProjection(PaymentProjection payment) {
+        return PaymentResponseDto.builder()
+                .id(payment.id())
+                .bookingId(payment.bookingId())
+                .amount(payment.amount())
+                .currency(payment.currency())
+                .status(payment.status())
+                .provider(PROVIDER_NAME)
+                .createdAt(payment.createdAt())
+                .build();
+    }
+
+    private PaymentResponseDto toResponseFromEntity(Payment payment) {
         return PaymentResponseDto.builder()
                 .id(payment.getId())
                 .bookingId(payment.getBookingId())

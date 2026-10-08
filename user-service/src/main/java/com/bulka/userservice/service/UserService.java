@@ -14,17 +14,8 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public UserResponse getUser(UUID userId){
-        User user = userRepository.findById(userId)
+    public UserResponse getUser(UUID userId) {
+        return userRepository.findUserResponseById(userId)
                 .orElseThrow(() -> new RuntimeException("User with id " + userId + " not found"));
-
-        return UserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .role(user.getRole())
-                .status(user.getStatus())
-                .build();
     }
 }

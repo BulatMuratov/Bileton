@@ -2,6 +2,7 @@ package com.bulka.bookingservice.service;
 
 import com.bulka.bookingservice.client.event.EventServiceClient;
 import com.bulka.bookingservice.client.event.dto.TicketSnapshotResponse;
+import com.bulka.bookingservice.dto.projection.TicketDetailsProjection;
 import com.bulka.bookingservice.dto.response.TicketDetailsResponse;
 import com.bulka.bookingservice.dto.response.TicketSummaryResponse;
 import com.bulka.bookingservice.exception.TicketNotFoundException;
@@ -79,20 +80,23 @@ public class TicketService {
 
     @Transactional(readOnly = true)
     public List<TicketSummaryResponse> getTicketsByUser(UUID userId){
-        return ticketRepository.findAllByBookingUserId(userId)
+        return ticketRepository.findAllSummaryByBookingUserId(userId)
                 .stream()
-                .map(ticketMapper::toSummaryResponse)
+                .map(ticketMapper::toSummaryResponseFromProjection)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public TicketDetailsResponse getTicket(UUID userId, UUID ticketId){
-        Ticket ticket = ticketRepository.findByIdAndBookingUserId(ticketId, userId)
-                .orElseThrow(() -> new TicketNotFoundException(
-                        "Ticket with id " + ticketId + " not found"
-                ));
+        TicketDetailsProjection ticket =
+                ticketRepository.findDetailsByIdAndBookingUserId(ticketId, userId)
+                        .orElseThrow(() ->
+                                new TicketNotFoundException(
+                                        "Ticket with id " + ticketId + " not found"
+                                )
+                        );
 
-        return ticketMapper.toDetailsResponse(ticket);
+        return ticketMapper.toDetailsResponseFromProjection(ticket);
     }
 
     @Transactional

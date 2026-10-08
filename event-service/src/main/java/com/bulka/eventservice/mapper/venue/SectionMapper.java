@@ -1,8 +1,10 @@
 package com.bulka.eventservice.mapper.venue;
 
+import com.bulka.eventservice.dto.projection.venue.SectionDetailsProjection;
 import com.bulka.eventservice.dto.request.venue.SectionRequestDto;
 import com.bulka.eventservice.dto.response.venue.SeatResponseDto;
 import com.bulka.eventservice.dto.response.venue.SectionResponseDto;
+import com.bulka.eventservice.model.venue.LayoutPosition;
 import com.bulka.eventservice.model.venue.Section;
 import com.bulka.eventservice.model.venue.Venue;
 import org.springframework.stereotype.Component;
@@ -15,26 +17,44 @@ public class SectionMapper {
         return Section.builder()
                 .venue(venue)
                 .name(request.getName())
-                .x(request.getX())
-                .y(request.getY())
-                .width(request.getWidth())
-                .height(request.getHeight())
-                .rotation(request.getRotation())
+                .layout(LayoutPosition.builder()
+                        .x(request.getX())
+                        .y(request.getY())
+                        .width(request.getWidth())
+                        .height(request.getHeight())
+                        .rotation(request.getRotation())
+                        .build())
                 .build();
     }
 
-    public SectionResponseDto toResponse(
+    public SectionResponseDto toResponseFromProjection(
+            SectionDetailsProjection section,
+            List<SeatResponseDto> seats){
+        return SectionResponseDto.builder()
+                .id(section.id())
+                .name(section.name())
+                .x(section.x())
+                .y(section.y())
+                .width(section.width())
+                .height(section.height())
+                .rotation(section.rotation())
+                .seats(seats)
+                .build();
+    }
+
+    public SectionResponseDto toResponseFromEntity(
             Section section,
             List<SeatResponseDto> seats
     ) {
+        LayoutPosition layout = section.getLayout();
         return SectionResponseDto.builder()
                 .id(section.getId())
                 .name(section.getName())
-                .x(section.getX())
-                .y(section.getY())
-                .width(section.getWidth())
-                .height(section.getHeight())
-                .rotation(section.getRotation())
+                .x(layout.getX())
+                .y(layout.getY())
+                .width(layout.getWidth())
+                .height(layout.getHeight())
+                .rotation(layout.getRotation())
                 .seats(seats)
                 .build();
     }

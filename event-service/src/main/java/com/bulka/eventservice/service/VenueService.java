@@ -1,5 +1,8 @@
 package com.bulka.eventservice.service;
 
+import com.bulka.eventservice.dto.projection.venue.SeatDetailsProjection;
+import com.bulka.eventservice.dto.projection.venue.SectionDetailsProjection;
+import com.bulka.eventservice.dto.projection.venue.VenueDetailsProjection;
 import com.bulka.eventservice.dto.request.venue.SectionRequestDto;
 import com.bulka.eventservice.dto.request.venue.VenueDetailsRequestDto;
 import com.bulka.eventservice.dto.request.venue.VenueInfoRequestDto;
@@ -73,7 +76,7 @@ public class VenueService {
                 )
                 .toList();
 
-        return venueMapper.toDetailsResponse(savedVenue, sections);
+        return venueMapper.toDetailsResponseFromEntity(savedVenue, sections);
     }
 
     private SectionResponseDto createSection(Venue venue, SectionRequestDto request){
@@ -95,50 +98,61 @@ public class VenueService {
                 .map(seatMapper::toResponse)
                 .toList();
 
-        return sectionMapper.toResponse(savedSection, seatResponses);
+        return sectionMapper.toResponseFromEntity(savedSection, seatResponses);
     }
 
     @Transactional(readOnly = true)
     public List<VenueSummaryResponseDto> getAllVenuesSummary(){
-        List<Venue> allVenues = venueRepository.findAll();
-        return allVenues
-                .stream()
-                .map(venueMapper::toVenueSummary)
+        List<VenueDetailsProjection> venueList = venueRepository.findAllVenuesSummary();
+
+        return venueList.stream()
+                .map(venueMapper::toVenueSummaryFromProjection)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public VenueDetailsResponseDto getVenueDetailsById(UUID venueId){
-        Venue venue =  venueRepository.findById(venueId).orElseThrow(() ->
-                new VenueNotFoundException("Venue with id " + venueId + " not found"));
+        VenueDetailsProjection venue = venueRepository.findVenueDetailsById(venueId)
+                .orElseThrow(() -> new VenueNotFoundException("Venue with id " + venueId + " not found"));
 
-        List<Section> sections = sectionRepository.findAllByVenueId(venue.getId());
+        List<SectionDetailsProjection> sections =
+                sectionRepository.findSectionsByVenueId(venueId);
 
-        List<Seat> allSeatsOfSections = seatRepository.findAllBySectionIdIn(sections
-                .stream()
-                .map(Section::getId)
-                .toList()
-        );
+        if (sections.isEmpty()) {
+            return venueMapper.toDetailsResponseFromProjection(venue, List.of());
+        }
 
-        Map<UUID, List<Seat>> seatsBySectionId = allSeatsOfSections.stream()
-                .collect(Collectors.groupingBy(
-                        seat -> seat.getSection().getId()
-                ));
-
-        List<SectionResponseDto> sectionResponses = sections.stream()
-                .map(section -> {
-                    List<SeatResponseDto> seatResponses = seatsBySectionId.
-                            getOrDefault(section.getId(), List.of())
-                            .stream()
-                            .map(seatMapper::toResponse)
-                            .toList();
-
-                    return sectionMapper.toResponse(section, seatResponses);
-                })
+        List<UUID> sectionIds = sections.stream()
+                .map(SectionDetailsProjection::id)
                 .toList();
 
+        List<SeatDetailsProjection> seats =
+                seatRepository.findDetailsBySectionIds(sectionIds);
 
-        return venueMapper.toDetailsResponse(venue, sectionResponses);
+        Map<UUID, List<SeatResponseDto>> seatsBySection =
+                seats.stream()
+                        .collect(Collectors.groupingBy(
+                                SeatDetailsProjection::sectionId,
+                                Collectors.mapping(
+                                        seatMapper::toSeatResponse,
+                                        Collectors.toList()
+                                )
+                        ));
+
+        List<SectionResponseDto> sectionResponses =
+                sections.stream()
+                        .map(section ->
+                                sectionMapper.toResponseFromProjection(
+                                        section,
+                                        seatsBySection.getOrDefault(
+                                                section.id(),
+                                                List.of()
+                                        )
+                                )
+                        )
+                        .toList();
+
+        return venueMapper.toDetailsResponseFromProjection(venue, sectionResponses);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -154,7 +168,7 @@ public class VenueService {
             venue.setDescription(request.getDescription());
         }
 
-        return venueMapper.toVenueSummary(venue);
+        return venueMapper.toVenueSummaryFromEntity(venue);
     }
 
 

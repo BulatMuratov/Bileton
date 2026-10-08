@@ -24,10 +24,10 @@ public class TicketController {
     private final TicketService ticketService;
 
     // temp
-    @PostMapping("/{bookingId}")
-    public void createTicket(@PathVariable UUID bookingId){
-        ticketService.createTickets(bookingId);
-    }
+//    @PostMapping("/{bookingId}")
+//    public void createTicket(@PathVariable UUID bookingId){
+//        ticketService.createTickets(bookingId);
+//    }
 
     @GetMapping
     public ResponseEntity<List<TicketSummaryResponse>> getTicketsByUser(
