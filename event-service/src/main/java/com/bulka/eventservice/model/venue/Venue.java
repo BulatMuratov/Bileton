@@ -1,6 +1,7 @@
 package com.bulka.eventservice.model.venue;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -35,11 +36,8 @@ public class Venue {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
-    private Integer width;
-
-    @Column(nullable = false)
-    private Integer height;
+    @Embedded
+    public Dimensions dimensions;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;

@@ -1,6 +1,7 @@
 package com.bulka.eventservice.model.venue;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
@@ -58,18 +59,6 @@ public class Seat {
     @Column(name = "seat_number", nullable = false)
     private Integer seatNumber;
 
-    @Column(nullable = false)
-    private Integer x;
-
-    @Column(nullable = false)
-    private Integer y;
-
-    @Column(nullable = false)
-    private Integer width;
-
-    @Column(nullable = false)
-    private Integer height;
-
-    @Column(nullable = false)
-    private Integer rotation;
+    @Embedded
+    public LayoutPosition layout;
 }
