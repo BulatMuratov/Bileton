@@ -99,6 +99,8 @@ springdoc:
         url: /swagger/booking
       - name: Payment Service
         url: /swagger/payment
+      - name: Gateway Aggregations
+        url: /gateway-aggregated.json 
 jwt:
   public-key-path: ${JWT_PUBLIC_KEY_PATH}
 
